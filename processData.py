@@ -1,30 +1,19 @@
-# import h5py
-#
-# with h5py.File("Data/testing.h5", "r") as file:
-#     lst_data = file['SDS']['LST'][:]
-#
-#
-#     for tempList in lst_data[:1]:
-#
-#         for temp in tempList:
-#             print(temp, end=",")
-#         print("")
-
-# python -m http.server 8000
-
-
 import numpy as np
 import geojson
 import h5py
 import time
 import json
 
+def tempConversion(tempValue):
+    tempValue *= .02
+    return (tempValue - 273.15) * (9/5) + 32
 
 def processFiles(filenameInput, filenameOutput):
     filename = "ECOSTRESS_L2_LSTE_08603_010_20200111T171110_0601_01.h5"
 
     with h5py.File(f"Data/{filename}", "r") as file:
         # Load bounding coordinates
+
         # print(file['SDS']['LST'].keys())
         print(file['SDS']['LST'][:][1][4000:5000])
         print("\n"*5)
@@ -54,8 +43,6 @@ def processFiles(filenameInput, filenameOutput):
     lat, long = index_to_latlong(0, 0)
     print(f"(0, 0) maps to ({lat}, {long})")
 
-
-
     # Create an empty list to store our GeoJSON features
     features = []
 
@@ -75,7 +62,7 @@ def processFiles(filenameInput, filenameOutput):
             if lst_data[i,j] != 0:
                 feature = geojson.Feature(
                     geometry=geojson.Point((lon, lat)),  # Assuming (longitude, latitude)
-                    properties={"LST": float(lst_data[i, j])}
+                    properties={"LST": tempConversion(float(lst_data[i, j]))}
                 )
                 features.append(feature)
 
