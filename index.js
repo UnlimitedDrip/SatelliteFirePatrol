@@ -25,15 +25,10 @@ $(document).ready(function () {
 
   map.on('load', () => {
 
-    console.log("AH")
-    // dataList = ["ECOSTRESS_L2_LSTE_08448_003_20200101T164153_0601_01.geojson", "ECOSTRESS_L2_LSTE_08448_004_20200101T164245_0601_01.geojson", "ECOSTRESS_L2_LSTE_08448_016_20200101T171450_0601_01.geojson", "ECOSTRESS_L2_LSTE_08448_017_20200101T171541_0601_01.geojson"]
-    // dataList = ["ECOSTRESS_L2_LSTE_08506_001_20200105T103113_0601_01.geojson", "ECOSTRESS_L2_LSTE_08588_012_20200110T175858_0601_01.geojson", "ECOSTRESS_L2_LSTE_08649_012_20200114T162324_0601_01.geojson", "ECOSTRESS_L2_LSTE_08719_001_20200119T040945_0601_01.geojson", "ECOSTRESS_L2_LSTE_08786_001_20200123T122449_0601_01.geojson"]
     dataList = [ "ECOSTRESS_L2_LSTE_08719_001_20200119T040945_0601_01.geojson", "ECOSTRESS_L2_LSTE_08786_001_20200123T122449_0601_01.geojson"]
-    // dataList = ["ECOSTRESS_L2_LSTE_08603_010_20200111T171110_0601_01.geojson", "ECOSTRESS_L2_LSTE_08719_001_20200119T040945_0601_01.geojson", "ECOSTRESS_L2_LSTE_08780_001_20200123T023443_0601_01.geojson", "ECOSTRESS_L2_LSTE_08902_001_20200130T232741_0601_01.geojson", "ECOSTRESS_L2_LSTE_09024_001_20200207T202041_0601_01.geojson", "ECOSTRESS_L2_LSTE_09030_011_20200208T061207_0601_01.geojson", "ECOSTRESS_L2_LSTE_09045_008_20200209T052434_0601_01.geojson", "ECOSTRESS_L2_LSTE_09091_010_20200212T043833_0601_01.geojson", "ECOSTRESS_L2_LSTE_09106_013_20200213T035100_0601_01.geojson", "ECOSTRESS_L2_LSTE_09146_001_20200215T171336_0601_01.geojson"]
 
     count = -1;
     for(var dataName of dataList){
-      console.log("HI")
       count++;
       data = "ProcessedData/" + dataName
       console.log(data)
@@ -70,9 +65,39 @@ $(document).ready(function () {
           'circle-opacity': 0.4
         }
 
+      // end of temp layer function
+      });
+
+      // Create a new popup instance
+      var popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      map.on('mousemove', 'temperature-circles'+count, function(e) {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        var coordinates = e.features[0].geometry.coordinates.slice();
+        var temperature = e.features[0].properties.LST.toFixed(2); // Replace 'temperature' with the field name in your data
+
+        // Populate the popup and set its coordinates based on the feature found.
+        popup.setLngLat(coordinates)
+          .setHTML('Temperature: ' + temperature + '°C') // Modify to match your content
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'temperature-circles', function() {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
       });
 
 
+    // end of data for loop
     }
+
+  // end of on load funciton
   });
+
+// end of document ready function
 });
