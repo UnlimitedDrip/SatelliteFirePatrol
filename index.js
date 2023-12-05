@@ -83,7 +83,7 @@ $(document).ready(function () {
 
         // Populate the popup and set its coordinates based on the feature found.
         popup.setLngLat(coordinates)
-          .setHTML('Temperature: ' + temperature + '°C') // Modify to match your content
+          .setHTML('Temperature: ' + temperature + '°F') // Modify to match your content
           .addTo(map);
       });
 
