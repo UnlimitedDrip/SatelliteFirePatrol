@@ -19,14 +19,15 @@ def getData(printData=True):
     # Format the current date and time as required by the API, typically in ISO format
     formatted_current_time = current_time.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    # You might want to look a few days or weeks back if the most recent data has not been processed yet.
-    # For example, to look back 30 days from the current date:
     start_date = (current_time - timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # This is a simplified example; you'll need to adjust the parameters based on your specific data needs
     params = {
     'short_name': 'ECOSTRESS',  # This is a general name; specific datasets have specific short_names
-    'bounding_box': '-154.0378492,18.589585,-160.744026,22.696332',  # This would search for data across the entire globe
+    # 'bounding_box': '17.41,-162,23.44,-153.39',  # This would search for data across the entire globe
+    # 'bounding_box': '-154.0378492,18.589585,-160.744026,22.696332',  # This would search for data across the entire globe
+    # [west_longitude,south_latitude,east_longitude,north_latitude]
+    'bounding_box': '-160.703887,18.394145,-154.429128,22.376492',  # This would search for data across the entire globe
     'temporal': f'{start_date},{formatted_current_time}',  # This would search for data in the year 2020
     }
 
@@ -51,4 +52,4 @@ def getData(printData=True):
 
     return data
 
-# getData()
+getData()

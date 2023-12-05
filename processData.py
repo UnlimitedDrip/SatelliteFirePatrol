@@ -9,17 +9,18 @@ def tempConversion(tempValue):
     return (tempValue - 273.15) * (9/5) + 32
 
 def processFiles(filenameInput, filenameOutput):
-    filename = "ECOSTRESS_L2_LSTE_08603_010_20200111T171110_0601_01.h5"
+    # filename = "ECOSTRESS_L2_LSTE_08603_010_20200111T171110_0601_01.h5"
 
-    with h5py.File(f"Data/{filename}", "r") as file:
+
+    with h5py.File(f"Data/{filenameInput}", "r") as file:
         # Load bounding coordinates
 
         # print(file['SDS']['LST'].keys())
-        print(file['SDS']['LST'][:][1][4000:5000])
-        print("\n"*5)
-        print(file['L2 LSTE Metadata'].keys())
-        print(file['L2 LSTE Metadata']['Emis2GoodAvg'][:])
-        print("\n"*5)
+        # print(file['SDS']['LST'][:][1][4000:5000])
+        # print("\n"*5)
+        # print(file['L2 LSTE Metadata'].keys())
+        # print(file['L2 LSTE Metadata']['Emis2GoodAvg'][:])
+        # print("\n"*5)
         lst_data = file['SDS']['LST'][:]
 
 
@@ -53,10 +54,11 @@ def processFiles(filenameInput, filenameOutput):
     print(lst_data.shape[1])
     count = 0
     divider = lst_data.shape[0]
-    for i in range(0, lst_data.shape[0], 2):
-        print(f"Progress: {count / divider}")
+    for i in range(0, lst_data.shape[0], 10):
         count += 1
-        for j in range(0, lst_data.shape[1], 2):
+        progress = count / divider
+        print(f"Progress: [{int(progress * 50) * '#'}{' ' * (50 - int(progress * 50))}] {progress * 100:.2f}%", end='\r', flush=True)
+        for j in range(0, lst_data.shape[1], 10):
             lat, lon = index_to_latlong(i, j)  # Make sure this returns (latitude, longitude)
 
             if lst_data[i,j] != 0:
