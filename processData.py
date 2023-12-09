@@ -4,23 +4,23 @@ import h5py
 import time
 import json
 
+# Converts kelvin to F
+# Scale the kelvin temp by .02
 def tempConversion(tempValue):
     tempValue *= .02
     return (tempValue - 273.15) * (9/5) + 32
 
+# Converts row/col index to lat, long
+def index_to_latlong(row_index, col_index):
+    return lats[row_index], longs[col_index]
+
+# Accepts input and output file name
+# Converts file to geojson of temperature
 def processFiles(filenameInput, filenameOutput):
-    # filename = "ECOSTRESS_L2_LSTE_08603_010_20200111T171110_0601_01.h5"
 
-
+    # Opens the file and gets box lat and long points as well as temp data
     with h5py.File(f"Data/{filenameInput}", "r") as file:
         # Load bounding coordinates
-
-        # print(file['SDS']['LST'].keys())
-        # print(file['SDS']['LST'][:][1][4000:5000])
-        # print("\n"*5)
-        # print(file['L2 LSTE Metadata'].keys())
-        # print(file['L2 LSTE Metadata']['Emis2GoodAvg'][:])
-        # print("\n"*5)
         lst_data = file['SDS']['LST'][:]
 
 
@@ -37,23 +37,22 @@ def processFiles(filenameInput, filenameOutput):
     lats = np.linspace(north, south, num_rows)
     longs = np.linspace(west, east, num_cols)
 
-    def index_to_latlong(row_index, col_index):
-        return lats[row_index], longs[col_index]
 
-    # Test conversion
     lat, long = index_to_latlong(0, 0)
-    print(f"(0, 0) maps to ({lat}, {long})")
 
     # Create an empty list to store our GeoJSON features
     features = []
 
     timeStart = time.time()
 
-    # Iterate through the LST data and convert each data point to a GeoJSON point feature
-    print(lst_data.shape[0])
-    print(lst_data.shape[1])
+    # shp file
+    # lst - cloudmask_qaqc.py
+        # cloud masks
+        # quality control
+
     count = 0
     divider = lst_data.shape[0]
+    # Iterate through the LST data and convert each data point to a GeoJSON point feature
     for i in range(0, lst_data.shape[0], 10):
         count += 1
         progress = count / divider
@@ -61,6 +60,7 @@ def processFiles(filenameInput, filenameOutput):
         for j in range(0, lst_data.shape[1], 10):
             lat, lon = index_to_latlong(i, j)  # Make sure this returns (latitude, longitude)
 
+            # Converts point to geojson form
             if lst_data[i,j] != 0:
                 feature = geojson.Feature(
                     geometry=geojson.Point((lon, lat)),  # Assuming (longitude, latitude)
@@ -68,6 +68,7 @@ def processFiles(filenameInput, filenameOutput):
                 )
                 features.append(feature)
 
+    # Get data ready to be written to file
     feature_collection = geojson.FeatureCollection(features)
 
     timeEnd = time.time()

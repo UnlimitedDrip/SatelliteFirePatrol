@@ -26,6 +26,7 @@ $(document).ready(function () {
   map.on('load', () => {
 
     dataList = [ "ECOSTRESS_L2_LSTE_08719_001_20200119T040945_0601_01.geojson", "ECOSTRESS_L2_LSTE_08786_001_20200123T122449_0601_01.geojson"]
+    // dataList = [ "ECOSTRESS_L2_LSTE_08506_001_20200105T103113_0601_01.geojson"]
 
     count = -1;
     for(var dataName of dataList){
