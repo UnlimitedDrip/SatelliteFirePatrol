@@ -98,8 +98,6 @@ def main(getDataFlag=True, folderPath = ""):
         for (dirpath, dirnames, filenames) in os.walk(folderPath):
             filesToProcess.extend(file for file in filenames)
 
-
-
     # process new data
     for file in filesToProcess:
         processFiles(file, "ProcessedData/" + file.replace(".h5", ".geojson"))

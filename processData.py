@@ -30,17 +30,14 @@ def processFiles(filenameInput, filenameOutput):
         south = file["StandardMetadata/SouthBoundingCoordinate"][0]
 
 
-    # Assuming the LST data has shape (num_rows, num_cols)
     num_rows, num_cols = len(lst_data), len(lst_data[0])  # As mentioned in your data structure
 
-    # Create arrays of latitudes and longitudes
     lats = np.linspace(north, south, num_rows)
     longs = np.linspace(west, east, num_cols)
 
 
-    lat, long = index_to_latlong(0, 0)
+    lat, long = lats[0], longs[0]
 
-    # Create an empty list to store our GeoJSON features
     features = []
 
     timeStart = time.time()
@@ -58,12 +55,12 @@ def processFiles(filenameInput, filenameOutput):
         progress = count / divider
         print(f"Progress: [{int(progress * 50) * '#'}{' ' * (50 - int(progress * 50))}] {progress * 100:.2f}%", end='\r', flush=True)
         for j in range(0, lst_data.shape[1], 10):
-            lat, lon = index_to_latlong(i, j)  # Make sure this returns (latitude, longitude)
+            lat, lon = lats[i], longs[j]
 
             # Converts point to geojson form
             if lst_data[i,j] != 0:
                 feature = geojson.Feature(
-                    geometry=geojson.Point((lon, lat)),  # Assuming (longitude, latitude)
+                    geometry=geojson.Point((lon, lat)), 
                     properties={"LST": tempConversion(float(lst_data[i, j]))}
                 )
                 features.append(feature)
