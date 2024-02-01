@@ -2,9 +2,18 @@ from processData import processFiles
 from getData import getData
 import json
 import geojson
+import shutil
 import requests
 from requests.auth import HTTPBasicAuth
 import os
+
+#data organization variables
+input_folder = "ProcessedData"
+output_folder_1 = "ProcessedData/H5"
+output_folder_2 = "ProcessedData/GeoJSON"
+file_types_1 = {".h5"} 
+file_types_2 = {".geojson"}
+
 
 class SessionWithHeaderRedirection(requests.Session):
 
@@ -54,8 +63,8 @@ class SessionWithHeaderRedirection(requests.Session):
 
 # Downlods file at the url provided (change username and password)
 def downloadFile(url, filename):
-    username = "__"
-    password = "__"
+    username = "_"
+    password = "_"
     token = 'eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6InpoYWxsZW1leWVyIiwiZXhwIjoxNzAyNzY5MjIwLCJpYXQiOjE2OTc1ODUyMjAsImlzcyI6IkVhcnRoZGF0YSBMb2dpbiJ9.afDgMBmlw4PtQYLZ7A8MDulwDE8Jjrln_MkU_QxfrnyRq2FVBlBDvfhfBWFAwUtXWwgfPrw9GmfFS_JKpOaTsuPm01g2iI--C_QebWeDY5JDhiFdZ_Eo2hu0y3fs3EhBrJ8X4Lt_ZkmW4Xlc4Ox_0oNDnByKEmeyG11SZMZgZmKj3bmIVT64zfO-ZRgAd5lZemH2G7YslT0qQ1l3P9ZdaDt0JmgQ73i8kwZ_MW_ukl3WOL5C2o2hB08s8ZayW1Fp6ZXFCeKJuy0VWnpniw8TmuAlFu8pzctw7G56cfvRbgChy_qHqRp9fooWIf9h_DsAJ_6RCmQFoKDy_HeJ7RT4aA'
 
     session = SessionWithHeaderRedirection(username, password)
@@ -101,6 +110,40 @@ def main(getDataFlag=True, folderPath = ""):
     # process new data
     for file in filesToProcess:
         processFiles(file, "ProcessedData/" + file.replace(".h5", ".geojson"))
+    
+    #call to organizer function
+    organize_data_by_type(input_folder, output_folder_1, output_folder_2, file_types_1, file_types_2)
+
+
+def organize_data_by_type(input_folder, output_folder_1, output_folder_2, file_types_1, file_types_2):
+    
+    for root, _, files in os.walk(input_folder):
+        
+        for file in files:
+            
+            file_path = os.path.join(root, file)
+            _, file_extension = os.path.splitext(file)
+
+            
+            if file_extension.lower() in file_types_1:
+                output_folder = output_folder_1
+            
+            elif file_extension.lower() in file_types_2:
+                output_folder = output_folder_2
+            
+            else:
+                # Skip files with unknown extensions
+                continue
+
+            # Create output folder if it doesn't exist
+            os.makedirs(output_folder, exist_ok=True)
+
+            # Move the file to the folder
+            destination_path = os.path.join(output_folder, file)
+
+            shutil.move(file_path, destination_path)
+
+
 
 
 
