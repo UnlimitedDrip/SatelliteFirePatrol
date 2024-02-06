@@ -3,71 +3,69 @@ import re
 import shutil
 from datetime import date
 
-def create_month_folder(base_folder, year, month):
+def createMonthFolder(base_folder, year, month):
     # Create the year folder
-    year_folder = os.path.join(base_folder, str(year))
-    if not os.path.exists(year_folder):
-        os.makedirs(year_folder)
+    yearFolder = os.path.join(base_folder, str(year))
+    if not os.path.exists(yearFolder):
+        os.makedirs(yearFolder)
 
     # Create the month folder
-    month_folder = os.path.join(year_folder, str(month))
-    if not os.path.exists(month_folder):
-        os.makedirs(month_folder)
+    monthFolder = os.path.join(yearFolder, str(month))
+    if not os.path.exists(monthFolder):
+        os.makedirs(monthFolder)
 
-    return month_folder
+    return monthFolder
 
-def readFileName(file_path):
+def readFileName(filePath):
     # Extract filename from the file path
-    filename = os.path.basename(file_path)
+    filename = os.path.basename(filePath)
 
     # Regex to find date in the filename
-    date_pattern = re.compile(r'(\d{4})(\d{2})\d{2}')
-    match = date_pattern.search(filename)
+    datePattern = re.compile(r'(\d{4})(\d{2})\d{2}')
+    match = datePattern.search(filename)
 
     if match:
         year, month = match.groups()
         # Call to organize by date
-        month_folder = create_month_folder("ProcessedData", year, month)
-        input_folder = "ProcessedData"
-        output_folder_1 = "H5"
-        output_folder_2 = "GeoJSON"
-        file_types_1 = {".h5"}
-        file_types_2 = {".geojson"}
+        monthFolder = createMonthFolder("ProcessedData", year, month)
+        inputFolder = "ProcessedData"
+        outputFolder1 = "H5"
+        outputFolder2 = "GeoJSON"
+        fileTypes1 = {".h5"}
+        fileTypes2 = {".geojson"}
 
-        organize_data_by_type(input_folder, month_folder, output_folder_1, output_folder_2, file_types_1, file_types_2)
+        organizeDataByType(inputFolder, monthFolder, outputFolder1, outputFolder2, fileTypes1, fileTypes2)
     else:
         return None
 
-def organize_data_by_type(input_folder, destination_folder, output_folder_1, output_folder_2, file_types_1, file_types_2):
+def organizeDataByType(inputFolder, destinationFolder, outputFolder1, outputFolder2, fileTypes1, fileTypes2):
     # Iterate through files in the input folder
-    for root, _, files in os.walk(input_folder):
+    for root, _, files in os.walk(inputFolder):
         for file in files:
-            file_path = os.path.join(root, file)
-            _, file_extension = os.path.splitext(file)
+            filePath = os.path.join(root, file)
+            _, fileExtension = os.path.splitext(file)
 
             # Extract date from the filename
-            date_match = re.search(r'(\d{4})(\d{2})\d{2}', file)
-            if date_match:
-                year, month = date_match.groups()
-                date_folder = destination_folder
-                
+            dateMatch = re.search(r'(\d{4})(\d{2})\d{2}', file)
+            if dateMatch:
+                year, month = dateMatch.groups()
+                dateFolder = destinationFolder
+
                 # Checks the extension and adds their destination based on type
-                if file_extension.lower() in file_types_1:
-                    output_folder = os.path.join(date_folder, output_folder_1)
-                elif file_extension.lower() in file_types_2:
-                    output_folder = os.path.join(date_folder, output_folder_2)
+                if fileExtension.lower() in fileTypes1:
+                    outputFolder = os.path.join(dateFolder, outputFolder1)
+                elif fileExtension.lower() in fileTypes2:
+                    outputFolder = os.path.join(dateFolder, outputFolder2)
                 else:
                     # Skip files with unknown extensions
                     continue
 
                 # Create output folder if it doesn't exist
-                os.makedirs(output_folder, exist_ok=True)
+                os.makedirs(outputFolder, exist_ok=True)
 
                 # Move the file to the folder
-                destination_path = os.path.join(output_folder, file)
-                shutil.move(file_path, destination_path)
+                destinationPath = os.path.join(outputFolder, file)
+                shutil.move(filePath, destinationPath)
             else:
                 # Skip files without a valid date in the filename
                 continue
-
-            

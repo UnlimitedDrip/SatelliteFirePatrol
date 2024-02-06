@@ -1,6 +1,6 @@
-from processDataManager import downloadFile
-from processData import processFiles
-from getData import getDataHelper
+from ProcessDataManager import downloadFile
+from ProcessData import processFiles
+from GetData import getDataHelper
 
 
 def main(startDate, endDate, dataPath, processedDataPath):

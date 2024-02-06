@@ -8,16 +8,16 @@ from datetime import datetime, timedelta
 def getData(printData=True):
 
     # Current date and time
-    current_time = datetime.now()
+    currentTime = datetime.now()
 
     # Format the current date and time as required by the API, typically in ISO format
-    formatted_current_time = current_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    formatted_currentTime = currentTime.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Get start date
-    start_date = (current_time - timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    startDate = (currentTime - timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-    data = getDataHelper(start_date, formatted_current_time)
+    data = getDataHelper(startDate, formatted_currentTime)
 
     if data:
         if printData:
@@ -25,7 +25,7 @@ def getData(printData=True):
 
     return data
 
-def getDataCustomRange(printData=True, startDate, endDate):
+def getDataCustomRange(printData, startDate, endDate):
 
     data = getDataHelper(startDate, endDate)
 
@@ -42,19 +42,19 @@ def getDataHelper(startDate, endDate):
     }
 
     # Ecostress API endpoint
-    api_endpoint = 'https://cmr.earthdata.nasa.gov/search/granules.json'
+    apiEndpoint = 'https://cmr.earthdata.nasa.gov/search/granules.json'
 
     params = {
     'short_name': 'ECO2LSTE',
     # [west_longitude,south_latitude,east_longitude,north_latitude]
     'bounding_box': '-160.703887,18.394145,-154.429128,22.376492',  # This is the bounding box for Hawaii
-    'temporal': f'{start_date},{endDate}',
+    'temporal': f'{startDate},{endDate}'
     }
 
     headers = {
         'accept': 'application/json',
     }
-    response = requests.get(api_endpoint, params=params, headers=headers)
+    response = requests.get(apiEndpoint, params=params, headers=headers)
 
     # Check if the request was successful
     if response.status_code == 200:
