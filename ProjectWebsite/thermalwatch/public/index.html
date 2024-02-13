@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel= "stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoidW5saW1pdGVkZHJpcCIsImEiOiJjbHNqbDNyZHExbnhnMmttbmJzMGxnMHUyIn0._TP9MLLTlUfbizgm0jvYDw';
+    </script>
+
+    <script src="index.js"></script>
+    <link rel="stylesheet" type="text/css" href="index.css">
+
+    <title>Thermalwatch</title>
+  </head>
+  <body>
+    <main>
+
+      <header id="header">
+        <div class="header-logo-container">
+          <img src="Sateillite_Fire_Patrol-logos_white.png" alt="logo" class="header-logo-image">
+        </div>
+
+        <nav id="nav-bar" class="header-nav-container">
+
+          <ul class="header-list">
+            <li><a class="nav-link" href="">About Us</a></li>
+            <li><a class="nav-link" href="">Account</a></li>
+            <li><a class="nav-link" href="">Resources</a></li>
+          </ul>
+
+        </nav>
+
+      </header>
+
+      <div id="map"></div>
+      <div class="map-overlay top">
+        <div class="map-overlay-inner">
+        <h2>Temperatures over 2023</h2>
+        <label id="month"></label>
+        <input id="slider" type="range" min="0" max="11" step="1" value="0">
+      </div>
+
+      <div class="map-overlay-inner">
+        <div id="legend" class="legend">
+          <div class="bar"></div>
+          <div>Celsius (c)</div>
+        </div>
+      </div>
+
+
+      </div>
+    </main>
+  </body>
+</html>
