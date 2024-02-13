@@ -1,15 +1,15 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <MapComp/>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import MapComp from './components/MapComponent.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    MapComp
   }
 }
 </script>
