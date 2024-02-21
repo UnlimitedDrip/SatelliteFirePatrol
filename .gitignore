@@ -1,2 +1,4 @@
 *.h5
 *.geojson
+node_modules/
+__pycache__/
