@@ -1,5 +1,5 @@
-from ProcessData import processFiles
-from GetData import getData
+from processData import processFiles
+from getData import getData
 from OrganizeData import readFileName
 import json
 import geojson
@@ -108,5 +108,5 @@ def main(getDataFlag=True, folderPath = ""):
 
 
 if __name__ == "__main__":
-    # main(False, "Data/")
-    main()
+    main(False, "Data/")
+    # main()

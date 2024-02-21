@@ -3,6 +3,7 @@ import geojson
 import h5py
 import time
 import json
+from global_land_mask import globe
 
 # Converts kelvin to F
 # Scale the kelvin temp by .02
@@ -45,16 +46,17 @@ def processFiles(filenameInput, filenameOutput):
 
     count = 0
     divider = lstData.shape[0]
+    coordStep = 10
     # Iterate through the LST data and convert each data point to a GeoJSON point feature
-    for i in range(0, lstData.shape[0], 10):
+    for i in range(0, lstData.shape[0], coordStep):
         count += 1
-        progress = count / divider
+        progress = (count / divider) * coordStep
         print(f"Progress: [{int(progress * 50) * '#'}{' ' * (50 - int(progress * 50))}] {progress * 100:.2f}%", end='\r', flush=True)
-        for j in range(0, lstData.shape[1], 10):
+        for j in range(0, lstData.shape[1], coordStep):
             lat, lon = lats[i], longs[j]
 
             # Converts point to geojson form
-            if lstData[i,j] != 0:
+            if globe.is_land(lat, lon):
                 feature = geojson.Feature(
                     geometry=geojson.Point((lon, lat)),
                     properties={"LST": tempConversion(float(lstData[i, j]))}
