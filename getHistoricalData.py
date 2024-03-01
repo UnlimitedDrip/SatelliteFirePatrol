@@ -1,6 +1,8 @@
-from ProcessDataManager import downloadFile
-from ProcessData import processFiles
-from GetData import getDataHelper
+from processDataManager import downloadFile
+from processData import processFiles
+from getData import getDataHelper, getDataCustomRange
+from datetime import datetime, timedelta
+
 
 
 def main(startDate, endDate, dataPath, processedDataPath):
@@ -24,8 +26,9 @@ def main(startDate, endDate, dataPath, processedDataPath):
 
 
 if __name__ == "__main__":
-    startDate = None # ISO format
-    endDate = None # ISO format
+    currentTime = datetime.now()
+    startDate = currentTime.strftime('%Y-%m-%dT%H:%M:%SZ') # ISO format
+    endDate = (currentTime - timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%SZ') # ISO format
     dataPath = "Data/"
     processedDataPath = "ProcessedData/"
 
