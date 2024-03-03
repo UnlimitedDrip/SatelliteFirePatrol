@@ -27,8 +27,8 @@ def main(startDate, endDate, dataPath, processedDataPath):
 
 if __name__ == "__main__":
     currentTime = datetime.now()
-    startDate = currentTime.strftime('%Y-%m-%dT%H:%M:%SZ') # ISO format
-    endDate = (currentTime - timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%SZ') # ISO format
+    startDate = "2023-01-01" # ISO format
+    endDate =  "2023-02-01"# ISO format
     dataPath = "Data/"
     processedDataPath = "ProcessedData/"
 

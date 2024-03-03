@@ -21,10 +21,12 @@ def AverageTemp(averageTempFileName, newFileName):
         numOfReadings = feature["properties"]['numOfReadings']
         sumLST = feature["properties"]['sumLST']
 
-        if lat not in tempDict:
+        if lon not in tempDict:
             tempDict[lon] = {}
 
         tempDict[lon][lat] = {"LST": lst, "sumLST": sumLST, "numOfReadings": numOfReadings}
+
+    print(tempDict)
 
     with open(newFileName, 'r') as file:
         newTempGeojsonData = geojson.load( file )
@@ -35,9 +37,11 @@ def AverageTemp(averageTempFileName, newFileName):
         lon = round(lon, 2)
         lat = round(lat, 2)
 
-        tempDict[lon][lat]["numOfReadings"] += 1
-        tempDict[lon][lat]["sumLST"] += feature["LST"]
-        tempDict[lon][lat]["LST"] = tempDict[lon][lat]["sumLST"] / tempDict[lon][lat]["numOfReadings"]
+        if lon in tempDict and lat in tempDict[lon]:
+
+            tempDict[lon][lat]["numOfReadings"] += 1
+            tempDict[lon][lat]["sumLST"] += feature["properties"]["LST"]
+            tempDict[lon][lat]["LST"] = tempDict[lon][lat]["sumLST"] / tempDict[lon][lat]["numOfReadings"]
 
     # convert tempDict to feature collection
     for lonKey in tempDict.keys():
@@ -109,4 +113,4 @@ def CreateTempFile(averageTempFileName):
 
 
 # CreateTempFile("ahhh.geojson")
-AverageTemp("ahhh.geojson", 'ahahaha.geojson')
+AverageTemp("ahhh.geojson", 'ProcessedData/ECOSTRESS_L2_LSTE_25502_004_20230104T082406_0601_02.geojson')
