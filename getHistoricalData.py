@@ -2,6 +2,7 @@ from processDataManager import downloadFile
 from processData import processFiles
 from getData import getDataHelper, getDataCustomRange
 from datetime import datetime, timedelta
+from Averaging import AverageTempManager
 
 
 
@@ -23,11 +24,12 @@ def main(startDate, endDate, dataPath, processedDataPath):
     # process new data
     for file in filesToProcess:
         processFiles(file, "ProcessedData/" + file.replace(".h5", ".geojson"))
+        AverageTempManager("ProcessedData/" + file.replace(".h5", ".geojson"))
 
 
 if __name__ == "__main__":
     currentTime = datetime.now()
-    startDate = "2023-01-01" # ISO format
+    startDate = "2022-01-01" # ISO format
     endDate =  "2023-02-01"# ISO format
     dataPath = "Data/"
     processedDataPath = "ProcessedData/"

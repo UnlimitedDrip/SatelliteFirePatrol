@@ -3,6 +3,27 @@ import numpy as np
 import time
 import geojson
 import json
+import os
+
+def AverageTempManager(newFileName):
+
+    # Get year and month from file name
+    baseParse = newFileName.split('_')[5].split('T')[0]
+    year = baseParse[0:4]
+    month = baseParse[4:6]
+
+    print(f"Year: {year}\nMonth: {month}")
+
+    # see if month's average file
+    averageFileName = f"{year}_{month}_average.geojson"
+    if not os.path.exists( f"ProcessedData/{averageFileName}" ):
+        # make the averaging file
+        CreateAverageTempFile(averageFileName)
+
+    # Average with the new file
+    AverageTemp(averageFileName, newFileName)
+
+    return
 
 def AverageTemp(averageTempFileName, newFileName):
     features = []
@@ -25,8 +46,6 @@ def AverageTemp(averageTempFileName, newFileName):
             tempDict[lon] = {}
 
         tempDict[lon][lat] = {"LST": lst, "sumLST": sumLST, "numOfReadings": numOfReadings}
-
-    print(tempDict)
 
     with open(newFileName, 'r') as file:
         newTempGeojsonData = geojson.load( file )
@@ -72,7 +91,7 @@ def AverageTemp(averageTempFileName, newFileName):
 
     return
 
-def CreateTempFile(averageTempFileName):
+def CreateAverageTempFile(averageTempFileName):
     # [-159.567123, 16.994625],  // Southwest coordinates: [longitude, latitude]
     # [-154.612488, 22.203054]   // Northeast coordinates: [longitude, latitude]
     timeStart = time.time()
@@ -113,4 +132,4 @@ def CreateTempFile(averageTempFileName):
 
 
 # CreateTempFile("ahhh.geojson")
-AverageTemp("ahhh.geojson", 'ProcessedData/ECOSTRESS_L2_LSTE_25502_004_20230104T082406_0601_02.geojson')
+# AverageTemp("ahhh.geojson", 'ProcessedData/ECOSTRESS_L2_LSTE_25502_004_20230104T082406_0601_02.geojson')
