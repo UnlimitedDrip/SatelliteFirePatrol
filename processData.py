@@ -67,7 +67,7 @@ def processFiles(filenameInput, filenameOutput):
     feature_collection = geojson.FeatureCollection(features)
 
     timeEnd = time.time()
-    print(f"Time to execute: {timeEnd - timeStart}")
+    print(f"\nTime to execute: {timeEnd - timeStart}")
 
     with open(filenameOutput, 'w') as f:
         json.dump(feature_collection, f)
