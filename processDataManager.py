@@ -1,6 +1,7 @@
 from processData import processFiles
 from getData import getData
 from OrganizeData import readFileName
+from Averaging import AverageTempManager
 import json
 import geojson
 import requests
@@ -102,11 +103,13 @@ def main(getDataFlag=True, folderPath = ""):
     # process new data
     for file in filesToProcess:
         processFiles(file, "ProcessedData/" + file.replace(".h5", ".geojson"))
+        AverageTempManager("ProcessedData/" + file.replace(".h5", ".geojson"))
+
 
     for file in filesToProcess:
         readFileName(file)
 
 
 if __name__ == "__main__":
-    main(False, "Data/")
-    # main()
+    # main(False, "Data/")
+    main()

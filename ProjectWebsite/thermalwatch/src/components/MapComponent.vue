@@ -26,11 +26,7 @@ export default {
   data() {
     return {
       dataList: [
-      "data/ECOSTRESS_L2_LSTE_31774_003_20240212T164119_0601_01.geojson",
-      "data/ECOSTRESS_L2_LSTE_31667_005_20240205T190358_0601_01.geojson",
-      "data/ECOSTRESS_L2_LSTE_31673_012_20240206T045454_0601_01.geojson",
-      "data/ECOSTRESS_L2_LSTE_31734_012_20240210T031946_0601_01.geojson",
-      "data/ECOSTRESS_L2_LSTE_31774_001_20240212T163926_0601_01.geojson"
+      "data/2023_01_average.geojson"
       ]
     };
   },

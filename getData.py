@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 
+
 # Requests ecostress data and returns a list of the responses
 def getData(printData=True):
 
@@ -23,9 +24,14 @@ def getData(printData=True):
         if printData:
             print(json.dumps(data, indent=4))
 
+    else:
+        print("no data found")
+
+
     return data
 
 def getDataCustomRange(printData, startDate, endDate):
+
 
     data = getDataHelper(startDate, endDate)
 
@@ -55,7 +61,7 @@ def getDataHelper(startDate, endDate):
         'accept': 'application/json',
     }
     response = requests.get(apiEndpoint, params=params, headers=headers)
-
+    data = None
     # Check if the request was successful
     if response.status_code == 200:
         data = response.json()
