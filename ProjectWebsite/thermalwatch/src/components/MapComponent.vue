@@ -1,24 +1,8 @@
 <template>
-
-  <header id="header">
-    <div class="header-logo-container">
-      <img src="data/Sateillite_Fire_Patrol-logos_white.png" alt="logo" class="header-logo-image">
-    </div>
-
-    <nav id="nav-bar" class="header-nav-container">
-
-      <ul class="header-list">
-        <li><a class="nav-link" href="">About Us</a></li>
-        <li><a class="nav-link" href="">Account</a></li>
-        <li><a class="nav-link" href="">Resources</a></li>
-      </ul>
-
-    </nav>
-
-  </header>
-
-  <div id="map"></div>
-  <div class="map-overlay top">
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+  <div class="map-overlay">
     <div class="map-overlay-inner">
     <h2>Temperatures over 2023</h2>
     <label id="month"></label>
@@ -116,21 +100,6 @@ export default {
 <style scoped>
   body { margin: 0; padding: 0; }
 
-
-
-  header {
-    position: fixed;
-    top: 0;
-    width: 100vw;
-    height: 15vh;
-    display: flex;
-    padding: 0px 25px;
-    justify-content: space-around;
-    align-items: center;
-    background-color: #283618;
-    color: #FEFAE0;
-  }
-
   div {
     display: block;
   }
@@ -140,56 +109,12 @@ export default {
     height: 10vh;
   }
 
-
-  .header-logo-container{
-    width: 50vw;
-    display: flex;
-    padding: 1rem 0rem 1rem 2rem;
+  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  #map-container{
+    position: fixed;
+    width: 100%;
+    height: 100%;
   }
-
-  .header-logo-image {
-    display: inline-block;
-    padding-right: 1rem;
-    font-size: 1.5rem;
-    text-rendering: auto;
-    padding-top: .75rem;
-    height: 100px;
-    width: 200px;
-  }
-
-  .header-list {
-    list-style: none;
-    min-height: 75px;
-    padding-top: .4rem;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding-right: 2rem;
-  }
-
-
-  .header-nav-container {
-    width: 50vw;
-    padding: 1rem 0rem 1rem 2rem;
-  }
-
-  .nav-link {
-    border: none;
-    font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    font-size: 3rem;
-    text-decoration: none;
-    color: #FEFAE0;
-  }
-
-  .nav-link:hover {
-    border: none;
-    color: #000;
-  }
-
-
-  #map { position: absolute; top: 15vh; bottom: 0; width: 100%; }
-
-
 
   .map-overlay {
     font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
