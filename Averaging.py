@@ -15,8 +15,8 @@ def AverageTempManager(newFileName):
     print(f"Year: {year}\nMonth: {month}")
 
     # see if month's average file
-    averageFileName = f"{year}_{month}_average.geojson"
-    if not os.path.exists( f"ProcessedData/{averageFileName}" ):
+    averageFileName = f"ProcessedData/{year}_{month}_average.geojson"
+    if not os.path.exists( f"{averageFileName}" ):
         # make the averaging file
         CreateAverageTempFile(averageFileName)
 
