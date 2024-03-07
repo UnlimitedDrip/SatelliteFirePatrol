@@ -7,10 +7,13 @@ from Averaging import AverageTempManager
 
 
 def main(startDate, endDate, dataPath, processedDataPath):
-
     currentDate = datetime.strptime(startDate, "%Y-%m-%d")
+    endDate = datetime.strptime(endDate, "%Y-%m-%d") + timedelta(days=0)
 
-    while currentDate <=  datetime.strptime(endDate, "%Y-%m-%d"):
+    while currentDate <= endDate:
+
+        print(f"Current: {currentDate}, End {endDate} | {currentDate <= endDate}")
+
         currentDateStr = currentDate.strftime("%Y-%m-%d")
         currentDate += timedelta(days=1)
         currentEndDateStr = currentDate.strftime("%Y-%m-%d")
@@ -39,8 +42,8 @@ def main(startDate, endDate, dataPath, processedDataPath):
 
 if __name__ == "__main__":
     currentTime = datetime.now()
-    startDate = "2022-01-01" # ISO format
-    endDate =  "2023-02-01"# ISO format
+    startDate = "2023-03-01" # ISO format
+    endDate =  "2023-03-01"# ISO format
     dataPath = "Data/"
     processedDataPath = "ProcessedData/"
 
