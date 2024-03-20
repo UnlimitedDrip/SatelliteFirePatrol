@@ -1,4 +1,5 @@
 *.h5
 *.geojson
+*.zip
 node_modules/
 __pycache__/

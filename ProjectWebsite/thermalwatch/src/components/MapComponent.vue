@@ -3,18 +3,23 @@
     <div id="map"></div>
   </div>
   <div class="map-overlay">
-    <div class="map-overlay-inner">
-    <h2>Temperatures over 2023</h2>
-    <label id="month"></label>
-    <input id="slider" type="range" min="0" max="11" step="1" value="0">
-  </div>
 
-  <div class="map-overlay-inner">
-    <div id="legend" class="legend">
-      <div class="bar"></div>
-      <div>Celsius (c)</div>
+    <div class="map-temp-info-container">
+      <h2 class="temp-info" id="temp-info">55°F</h2>
     </div>
-  </div>
+
+    <div class="map-overlay-inner">
+      <h2>Temperatures over 2023</h2>
+      <label id="month"></label>
+      <input id="slider" type="range" min="0" max="11" step="1" value="0">
+    </div>
+
+    <div class="map-overlay-inner">
+      <div id="legend" class="legend">
+        <div class="bar"></div>
+        <div>Celsius (c)</div>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -26,7 +31,7 @@ export default {
   data() {
     return {
       dataList: [
-      "data/2023_01_average.geojson"
+      "data/2022_01_average.geojson"
       ]
     };
   },
@@ -51,6 +56,8 @@ export default {
       minZoom: 5,
     });
 
+
+
     map.on('load', () => {
       for (const [index, dataName] of this.dataList.entries()) {
         const data = dataName;
@@ -69,23 +76,47 @@ export default {
               'interpolate',
               ['linear'],
               ['get', 'LST'],
-              0, '#313695',
-              75, '#009966',
-              150, '#d73027'
+              0, '#0000FF',
+              40, '#00FF00',
+              75, '#FF0000',
             ],
             'circle-radius': [
               'interpolate',
               ['linear'],
               ['zoom'],
-              5, 1,
+              5, .3,
               8, 2,
-              10, 10,
-              11, 20,
-              15, 100
+              10, 5,
+              11, 10,
+              15, 50
             ],
             'circle-opacity': 0.4
           }
         });
+
+
+        // Mouse enter event
+        map.on('mouseenter', 'temperature-circles' + index, (e) => {
+          map.getCanvas().style.cursor = 'pointer';
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const temperature = e.features[0].properties.LST;
+          console.log(coordinates)
+          console.log(temperature)
+
+          document.getElementById("temp-info").textContent = temperature.toFixed(2) + "°F";
+
+          /*
+          popup.setLngLat(coordinates)
+            .setHTML(`Temperature: ${temperature}°C`)
+            .addTo(map);
+          */
+        });
+
+        // Mouse leave event
+
+
+
+
       }
     })
   }
@@ -148,6 +179,18 @@ export default {
   position: relative;
   margin: 0;
   cursor: ew-resize;
+  }
+
+  .map-temp-info-container {
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .temp-info {
+    font-size: 30px;
   }
 
 </style>

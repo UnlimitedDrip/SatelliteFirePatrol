@@ -16,7 +16,7 @@ def tempConversion(tempValue):
 def processFiles(filenameInput, filenameOutput):
 
     # Opens the file and gets box lat and long points as well as temp data
-    with h5py.File(f"Data/{filenameInput}", "r") as file:
+    with h5py.File(f"{filenameInput}", "r") as file:
         # Load bounding coordinates
         lstData = file['SDS']['LST'][:]
 

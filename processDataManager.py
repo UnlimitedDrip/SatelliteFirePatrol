@@ -73,11 +73,16 @@ def downloadFile(url, filename):
                 file.write(chunk)
 
     except requests.exceptions.HTTPError as e:
-
-        # handle any errors here
-
         print(e)
+        return False
+    except (HTTPError, ChunkedEncodingError, IncompleteRead) as e:
+        print(f"Download failed due to network-related error: {e}")
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return False
 
+    return True
 
 # Downloads and converts the most recent data from NASA Ecostress
 def main(getDataFlag=True, folderPath = ""):
