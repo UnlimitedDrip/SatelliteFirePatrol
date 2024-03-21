@@ -40,7 +40,7 @@ export default {
   data() {
     return {
       dataList: [
-      "data/2022_01_average.geojson"
+      "data/2023_01_average.geojson"
       ],
       map: null,
       year: 2023,
@@ -126,6 +126,19 @@ export default {
             'circle-opacity': 0.4
           }
         });
+
+
+        // Mouse enter event
+        map.on('mouseenter', 'temperature-circles' + index, (e) => {
+          map.getCanvas().style.cursor = 'pointer';
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const temperature = e.features[0].properties.LST;
+          console.log(coordinates)
+          console.log(temperature)
+
+          document.getElementById("temp-info").textContent = temperature.toFixed(2) + "°F";
+        });
+
       });
     }
   },
