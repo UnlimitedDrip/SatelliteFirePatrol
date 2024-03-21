@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "deck.gl": "^8.9.34",
+    "mapbox-gl-vue": "^2.0.4"
+  }
+}
