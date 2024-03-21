@@ -5,13 +5,14 @@
   <div class="map-overlay">
 
     <select id="dropdown" @change="updateDataList($event)"></select>
+    <select id="dropdownYear" @change="updateYear($event)"></select>
 
     <div class="map-temp-info-container">
       <h2 class="temp-info" id="temp-info">55°F</h2>
     </div>
 
     <div class="map-overlay-inner">
-    <h2>Temperatures over 2023</h2>
+    <h2 id="slider-text">Temperatures over 2023</h2>
     <label id="month"></label>
     <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)">
   </div>
@@ -34,17 +35,16 @@
 
 <script>
 import mapboxgl from 'mapbox-gl';
-//import VueDatePicker from '@vuepic/vue-datepicker';
-// import '@vuepic/vue-datepicker/dist/main.css';
 
 export default {
-  //components: { VueDatePicker },
   data() {
     return {
       dataList: [
       "data/2022_01_average.geojson"
       ],
-      map: null // Initialize map property
+      map: null,
+      year: 2023,
+      month: 1,
     };
   },
   methods: {
@@ -55,15 +55,23 @@ export default {
       this.reloadMapOverlay();
     },
     updateDataListSlider(event) {
-      if (event.target.value >=10){
-        this.dataList = ["data/2023_" + event.target.value + "_average.geojson"];
+      var monthVal = Number(event.target.value)+1;
+      this.month = monthVal;
+      this.updateMapOverlayHelper()
+    },
+    updateYear(event){
+      this.year = event.target.options[event.target.selectedIndex].value;
+      document.getElementById('slider-text').textContent = `Temperatures over ${this.year}`
+      this.updateMapOverlayHelper()
+    },
+    updateMapOverlayHelper() {
+      if (this.month >=10){
+        this.dataList = [`$data/${this.year}_${this.month}_average.geojson`];
       }
       else {
-        this.dataList = ["data/2023_0" + event.target.value + "_average.geojson"];
+        this.dataList = [`data/${this.year}_0${this.month}_average.geojson`];
       }
       this.reloadMapOverlay();
-      console.log("rahhh")
-      console.log("data/2023_0" + event.target.value + "_average.geojson")
     },
     reloadMapOverlay() {
       
@@ -111,9 +119,9 @@ export default {
               ['zoom'],
               5, 1,
               8, 2,
-              10, 10,
-              11, 20,
-              15, 100
+              10, 5,
+              11, 10,
+              15, 50
             ],
             'circle-opacity': 0.4
           }
@@ -158,6 +166,16 @@ export default {
       optionElement.textContent = option;
       dropdown.appendChild(optionElement);
     });
+
+    const dropdownYear = document.getElementById("dropdownYear");
+    const optionsYear = [2023,2022,2021,2020,2019];
+
+    optionsYear.forEach(option => {
+      const optionElement = document.createElement("option");
+      optionElement.textContent = option;
+      dropdownYear.appendChild(optionElement);
+    });
+
 
     
   }
