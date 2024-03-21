@@ -3,23 +3,18 @@
     <div id="map"></div>
   </div>
   <div class="map-overlay">
-
-    <div class="map-temp-info-container">
-      <h2 class="temp-info" id="temp-info">55°F</h2>
-    </div>
-
     <div class="map-overlay-inner">
-      <h2>Temperatures over 2023</h2>
-      <label id="month"></label>
-      <input id="slider" type="range" min="0" max="11" step="1" value="0">
-    </div>
+    <h2>Temperatures over 2023</h2>
+    <label id="month"></label>
+    <input id="slider" type="range" min="0" max="11" step="1" value="0">
+  </div>
 
-    <div class="map-overlay-inner">
-      <div id="legend" class="legend">
-        <div class="bar"></div>
-        <div>Celsius (c)</div>
-      </div>
+  <div class="map-overlay-inner">
+    <div id="legend" class="legend">
+      <div class="bar"></div>
+      <div>Celsius (c)</div>
     </div>
+  </div>
 
   </div>
 </template>
@@ -31,7 +26,11 @@ export default {
   data() {
     return {
       dataList: [
-      "data/2022_01_average.geojson"
+      "data/ECOSTRESS_L2_LSTE_31774_003_20240212T164119_0601_01.geojson",
+      "data/ECOSTRESS_L2_LSTE_31667_005_20240205T190358_0601_01.geojson",
+      "data/ECOSTRESS_L2_LSTE_31673_012_20240206T045454_0601_01.geojson",
+      "data/ECOSTRESS_L2_LSTE_31734_012_20240210T031946_0601_01.geojson",
+      "data/ECOSTRESS_L2_LSTE_31774_001_20240212T163926_0601_01.geojson"
       ]
     };
   },
@@ -56,8 +55,6 @@ export default {
       minZoom: 5,
     });
 
-
-
     map.on('load', () => {
       for (const [index, dataName] of this.dataList.entries()) {
         const data = dataName;
@@ -76,51 +73,66 @@ export default {
               'interpolate',
               ['linear'],
               ['get', 'LST'],
-              0, '#0000FF',
-              40, '#00FF00',
-              75, '#FF0000',
+              0, '#313695',
+              75, '#009966',
+              150, '#d73027'
             ],
             'circle-radius': [
               'interpolate',
               ['linear'],
               ['zoom'],
-              5, .3,
+              5, 1,
               8, 2,
-              10, 5,
-              11, 10,
-              15, 50
+              10, 10,
+              11, 20,
+              15, 100
             ],
             'circle-opacity': 0.4
           }
         });
-
-
-        // Mouse enter event
-        map.on('mouseenter', 'temperature-circles' + index, (e) => {
-          map.getCanvas().style.cursor = 'pointer';
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const temperature = e.features[0].properties.LST;
-          console.log(coordinates)
-          console.log(temperature)
-
-          document.getElementById("temp-info").textContent = temperature.toFixed(2) + "°F";
-
-          /*
-          popup.setLngLat(coordinates)
-            .setHTML(`Temperature: ${temperature}°C`)
-            .addTo(map);
-          */
-        });
-
-        // Mouse leave event
-
-
-
-
       }
     })
   }
 }
+
+const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ]
+
+function filterByMonth(month) {
+  // const filters = ['==', 'month', month];
+    // map.setFilter('earthquake-circles', filters);
+    // map.setFilter('earthquake-labels', filters);
+
+    // Set the label to the month
+    document.getElementById('month').textContent = months[month];
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    // Set default to January
+    filterByMonth(0);
+
+    // Set month depending on where the slider is positioned
+    document.getElementById('slider').addEventListener('input', (e) => {
+      const month = parseInt(e.target.value, 10);
+      filterByMonth(month);
+      console.log(month);
+  });
+});
+
+
+
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -136,12 +148,13 @@ export default {
     height: 10vh;
   }
 
-  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
   #map-container{
     position: fixed;
     width: 100%;
     height: 100%;
   }
+  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  
 
   .map-overlay {
     font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -179,18 +192,6 @@ export default {
   position: relative;
   margin: 0;
   cursor: ew-resize;
-  }
-
-  .map-temp-info-container {
-    background-color: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-
-  .temp-info {
-    font-size: 30px;
   }
 
 </style>
