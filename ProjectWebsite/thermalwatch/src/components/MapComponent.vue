@@ -13,7 +13,7 @@
     <div class="map-overlay-inner">
     <h2>Temperatures over 2023</h2>
     <label id="month"></label>
-    <input id="slider" type="range" min="0" max="11" step="1" value="0">
+    <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)">
   </div>
 
   <div class="map-overlay-inner">
@@ -53,6 +53,17 @@ export default {
       const selectedValue = event.target.options[selectedIndex].value;
       this.dataList = ["data/" + selectedValue];
       this.reloadMapOverlay();
+    },
+    updateDataListSlider(event) {
+      if (event.target.value >=10){
+        this.dataList = ["data/2023_" + event.target.value + "_average.geojson"];
+      }
+      else {
+        this.dataList = ["data/2023_0" + event.target.value + "_average.geojson"];
+      }
+      this.reloadMapOverlay();
+      console.log("rahhh")
+      console.log("data/2023_0" + event.target.value + "_average.geojson")
     },
     reloadMapOverlay() {
       
@@ -168,10 +179,6 @@ const months = [
   ]
 
 function filterByMonth(month) {
-  // const filters = ['==', 'month', month];
-    // map.setFilter('earthquake-circles', filters);
-    // map.setFilter('earthquake-labels', filters);
-
     // Set the label to the month
     document.getElementById('month').textContent = months[month];
   }
@@ -184,7 +191,6 @@ function filterByMonth(month) {
     document.getElementById('slider').addEventListener('input', (e) => {
       const month = parseInt(e.target.value, 10);
       filterByMonth(month);
-      console.log(month);
   });
 });
 </script>
