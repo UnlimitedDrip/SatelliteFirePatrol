@@ -5,7 +5,7 @@ import geojson
 import json
 import os
 
-def AverageTempManager(newFileName):
+def AverageTempManager(directoryPath, filePath, newFileName):
 
     # Get year and month from file name
     baseParse = newFileName.split('_')[5].split('T')[0]
@@ -15,13 +15,14 @@ def AverageTempManager(newFileName):
     print(f"Year: {year}\nMonth: {month}")
 
     # see if month's average file
-    averageFileName = f"ProcessedData/{year}_{month}_average.geojson"
+    averageFileName = os.path.join(directoryPath, f"{year}_{month}_average.geojson")
+    # averageFileName = f"ProcessedData/{year}_{month}_average.geojson"
     if not os.path.exists( f"{averageFileName}" ):
         # make the averaging file
         CreateAverageTempFile(averageFileName)
 
     # Average with the new file
-    AverageTemp(averageFileName, newFileName)
+    AverageTemp(averageFileName, filePath)
 
     return
 

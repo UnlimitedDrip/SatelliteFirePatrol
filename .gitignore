@@ -1,3 +1,4 @@
+*.pem
 *.csv
 *.h5
 *.geojson
