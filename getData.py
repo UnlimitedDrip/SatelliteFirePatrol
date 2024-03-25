@@ -15,7 +15,7 @@ def getData(printData=True):
     formatted_currentTime = currentTime.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Get start date
-    startDate = (currentTime - timedelta(days=10)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    startDate = (currentTime - timedelta(days=25)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
     data = getDataHelper(startDate, formatted_currentTime)

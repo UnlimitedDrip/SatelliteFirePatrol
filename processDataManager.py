@@ -7,6 +7,9 @@ import geojson
 import requests
 from requests.auth import HTTPBasicAuth
 import os
+import csv
+import subprocess
+
 
 class SessionWithHeaderRedirection(requests.Session):
 
@@ -64,7 +67,7 @@ def downloadFile(url, filename):
 
     try:
         response = session.get(url, stream=True)
-        print(response.status_code)
+        print(f"downloading new file {response.status_code}")
 
         response.raise_for_status()
 
@@ -84,37 +87,81 @@ def downloadFile(url, filename):
 
     return True
 
-# Downloads and converts the most recent data from NASA Ecostress
-def main(getDataFlag=True, folderPath = ""):
-    filesToProcess = []
+def checkIfFileInCSV(newFileName, csvDataList):
+    for csvRow in csvDataList:
 
-    # check if new data is wanted
-    if getDataFlag:
-        # Get most recent data
-        data = getData(printData=False)
-        for entry in data["feed"]["entry"]:
-            filename = entry["producer_granule_id"]
-            links = entry["links"]
-            downloadLink = links[0]["href"]
+        if newFileName == csvRow:
+            return True
+
+
+    return False
+
+# Downloads and converts the most recent data from NASA Ecostress
+def manageData(dataFolderPath, processedDataFolderPath, csvFilePath):
+    filesToProcess = []
+    csvData = []
+
+    if not os.path.exists(csvFilePath):
+        with open(csvFilePath, "w") as file:
+            pass
+    else:
+        with open(csvFilePath, "r") as file:
+            csvReader = csv.reader(file)
+            for row in csvReader:
+                csvData.extend(row)
+
+    # Get most recent data
+    data = getData(printData=False)
+    for entry in data["feed"]["entry"]:
+        filename = entry["producer_granule_id"]
+        links = entry["links"]
+        downloadLink = links[0]["href"]
+
+        # Check if file is already found locally
+        if not checkIfFileInCSV(filename, csvData):
 
             # Downlod the file
-            downloadFile(downloadLink, "Data/" + filename)
+            print(filename)
+            print(csvData)
+            downloadFile(downloadLink, os.path.join(dataFolderPath, filename))
             filesToProcess.append(filename)
-    # Otherwise, process the data that is avaliable locally
-    else:
-        for (dirpath, dirnames, filenames) in os.walk(folderPath):
-            filesToProcess.extend(file for file in filenames)
+            csvData.append(filename)
+        else:
+            print("File already used")
 
     # process new data
     for file in filesToProcess:
-        processFiles(file, "ProcessedData/" + file.replace(".h5", ".geojson"))
-        AverageTempManager("ProcessedData/" + file.replace(".h5", ".geojson"))
+        processFiles( os.path.join(dataFolderPath, file), os.path.join( processedDataFolderPath, file.replace(".h5", ".geojson") ) )
+        AverageTempManager(processedDataFolderPath, os.path.join( processedDataFolderPath, file.replace(".h5", ".geojson") ), file.replace(".h5", ".geojson") )
 
 
     for file in filesToProcess:
         readFileName(file)
 
+    #  Write to csv
+    with open(csvFilePath, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(csvData)
+
+def main(dataFolderPath, processedDataFolderPath, csvFilePath):
+
+
+    manageData(dataFolderPath, processedDataFolderPath, csvFilePath)
+
+    # publish_data ben/capstone_project
+
+    # Directory to change to
+    directory = "/projects/climate_data"
+    command = "publish_data ben/capstone_project"
+    # directory = "Data"
+    # command = "publish_data Data"
+
+    # Execute the command in the specified directory
+    result = subprocess.run(command, cwd=directory, shell=True, capture_output=True, text=True)
+
+    # Print the output
+    print(result.stdout)
+
 
 if __name__ == "__main__":
-    # main(False, "Data/")
-    main()
+    main("/scratch/zmh47/Data", "/projects/climate_data/ben/capstone_project", "/projects/climate_data/ben/capstone_project/info.csv")
