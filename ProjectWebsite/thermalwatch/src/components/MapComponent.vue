@@ -110,8 +110,9 @@ export default {
               ['linear'],
               ['get', 'LST'],
               0, '#313695',
-              75, '#009966',
-              150, '#d73027'
+              50, '#009966',
+              100, '#d73027',
+              150, '#A020F0'
             ],
             'circle-radius': [
               'interpolate',
@@ -273,7 +274,8 @@ function filterByMonth(month) {
   .map-overlay .legend .bar {
   height: 10px;
   width: 100%;
-  background: linear-gradient(to right, #fca107, #7f3121);
+  /* background: linear-gradient(to right, #fca107, #7f3121); */
+  background: linear-gradient(to right, #313695, #009966, #d73027, #A020F0);
   }
 
   .map-overlay input {
