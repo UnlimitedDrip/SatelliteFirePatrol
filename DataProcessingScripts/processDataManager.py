@@ -164,4 +164,4 @@ def main(dataFolderPath, processedDataFolderPath, csvFilePath):
 
 
 if __name__ == "__main__":
-    main("/scratch/zmh47/Data", "/projects/climate_data/ben/capstone_project", "/projects/climate_data/ben/capstone_project/info.csv")
+    main("/scratch/zmh47/Data", "/projects/climate_data/ben/capstone_project", "/projects/climate_data/ben/capstone_project/data.csv")
