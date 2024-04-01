@@ -51,7 +51,7 @@ export default {
     updateDataList(event) {
       const selectedIndex = event.target.selectedIndex;
       const selectedValue = event.target.options[selectedIndex].value;
-      this.dataList = ["data/" + selectedValue];
+      //this.dataList = ["data/" + selectedValue];
       this.fetchFile(selectedValue);
     },
     updateDataListSlider(event) {
@@ -65,13 +65,16 @@ export default {
       this.updateAverageOverlayHelper()
     },
     updateAverageOverlayHelper() {
+      let averageFilename = ""
       if (this.month >=10 ){
-        this.dataList = [`data/${this.year}_${this.month}_average.geojson`];
+        averageFilename = `${this.year}_${this.month}_average.geojson`;
       }
       else {
-        this.dataList = [`data/${this.year}_0${this.month}_average.geojson`];
+        averageFilename = `${this.year}_0${this.month}_average.geojson`;
       }
-      this.reloadMapOverlay();
+      // this.dataList = [averageFilename];
+      // this.reloadMapOverlay();
+      this.fetchFile(averageFilename);
     },
     reloadMapOverlay() {
 
@@ -182,6 +185,22 @@ export default {
           dropdown.appendChild(optionElement);
         });
 
+
+        // Populate yearly average dropdown
+        const averages = options.filter( element => element.startsWith('20') )
+
+        // Get averageYears from averages
+        const averageYears = averages.map( element => element.split("_")[0] )
+        const uniqueAverageYears = Array.from(new Set(averageYears));
+
+        const dropdownYear = document.getElementById("dropdownYear");
+
+        uniqueAverageYears.forEach(option => {
+          const optionElement = document.createElement("option");
+          optionElement.textContent = option;
+          dropdownYear.appendChild(optionElement);
+        });
+
       } catch (error) {
         console.error('There was a problem fetching the file:', error);
       }
@@ -230,14 +249,6 @@ export default {
       this.reloadMapOverlay(); // Initial load of map overlay
     });
 
-    const dropdownYear = document.getElementById("dropdownYear");
-    const optionsYear = [2023,2022,2021,2020,2019];
-
-    optionsYear.forEach(option => {
-      const optionElement = document.createElement("option");
-      optionElement.textContent = option;
-      dropdownYear.appendChild(optionElement);
-    });
   }
 }
 
