@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 
 //website to be scraped
-const url = '';
+const url = 'https://rcdata.nau.edu/climate_data/capstone_project/data.csv';
 
 axios.get(url)
   .then(response => {

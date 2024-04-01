@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12",
     "deck.gl": "^8.9.34",
-    "mapbox-gl-vue": "^2.0.4"
+    "mapbox-gl-vue": "^2.0.4",
+    "papaparse": "^5.4.1"
   }
 }
