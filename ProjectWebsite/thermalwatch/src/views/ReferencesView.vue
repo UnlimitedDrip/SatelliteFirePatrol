@@ -1,5 +1,5 @@
 <template>
     <main class="container">
-        <p>references</p>
+        <p>account</p>
     </main>
 </template>

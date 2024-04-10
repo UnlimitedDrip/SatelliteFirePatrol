@@ -59,17 +59,20 @@ class SessionWithHeaderRedirection(requests.Session):
 
 # Downlods file at the url provided (change username and password)
 def downloadFile(url, filename):
-    username = "__"
-    password = "__"
+    username = "zhallemeyer"
+    password = "Momo_is_waifu05!"
     token = 'eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6InpoYWxsZW1leWVyIiwiZXhwIjoxNzAyNzY5MjIwLCJpYXQiOjE2OTc1ODUyMjAsImlzcyI6IkVhcnRoZGF0YSBMb2dpbiJ9.afDgMBmlw4PtQYLZ7A8MDulwDE8Jjrln_MkU_QxfrnyRq2FVBlBDvfhfBWFAwUtXWwgfPrw9GmfFS_JKpOaTsuPm01g2iI--C_QebWeDY5JDhiFdZ_Eo2hu0y3fs3EhBrJ8X4Lt_ZkmW4Xlc4Ox_0oNDnByKEmeyG11SZMZgZmKj3bmIVT64zfO-ZRgAd5lZemH2G7YslT0qQ1l3P9ZdaDt0JmgQ73i8kwZ_MW_ukl3WOL5C2o2hB08s8ZayW1Fp6ZXFCeKJuy0VWnpniw8TmuAlFu8pzctw7G56cfvRbgChy_qHqRp9fooWIf9h_DsAJ_6RCmQFoKDy_HeJ7RT4aA'
 
     session = SessionWithHeaderRedirection(username, password)
 
     try:
         response = session.get(url, stream=True)
-        print(f"downloading new file {response.status_code}")
 
         response.raise_for_status()
+        print(f"downloading new file {response.status_code}")
+
+        if(response.status_code != 200):
+            return False
 
         with open(filename, "wb") as file:
             for chunk in response.iter_content(chunk_size=1024*1024):
@@ -84,6 +87,11 @@ def downloadFile(url, filename):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return False
+
+    # This if has no functional use - it's satisfies pytests, so don't remove
+    if(response.status_code != 200):
+        return False
+
 
     return True
 
@@ -119,15 +127,19 @@ def manageData(dataFolderPath, processedDataFolderPath, csvFilePath):
 
         # Check if file is already found locally
         if not checkIfFileInCSV(filename, csvData):
+            # Download temp h5
+            if downloadFile(downloadLink, os.path.join(dataFolderPath, filename)):
 
-            # Downlod the file
-            print(filename)
-            print(csvData)
-            downloadFile(downloadLink, os.path.join(dataFolderPath, filename))
-            filesToProcess.append(filename)
-            csvData.append(filename)
+                # Download cloud mask h5
+                cloudMaskLink = downloadLink.replace("ECO2LSTE.001", "ECO2CLD.001").replace("_L2_LSTE_", "_L2_CLOUD_")
+                cloudMaskFileName = filename.replace("_L2_LSTE_", "_L2_CLOUD_")
+                if downloadFile(cloudMaskLink, os.path.join(dataFolderPath, cloudMaskFileName)):
+
+                    filesToProcess.append(filename)
+                    csvData.append(filename)
         else:
             print("File already used")
+
 
     # process new data
     for file in filesToProcess:
@@ -135,8 +147,8 @@ def manageData(dataFolderPath, processedDataFolderPath, csvFilePath):
         AverageTempManager(processedDataFolderPath, os.path.join( processedDataFolderPath, file.replace(".h5", ".geojson") ), file.replace(".h5", ".geojson") )
 
 
-    for file in filesToProcess:
-        readFileName(file)
+    # for file in filesToProcess:
+    #     readFileName(file)
 
     #  Write to csv
     with open(csvFilePath, mode='w', newline='') as file:
@@ -165,3 +177,4 @@ def main(dataFolderPath, processedDataFolderPath, csvFilePath):
 
 if __name__ == "__main__":
     main("/scratch/zmh47/Data", "/projects/climate_data/ben/capstone_project", "/projects/climate_data/ben/capstone_project/data.csv")
+    # main("Data", "ProcessedData", "ProcessedData/data.csv")
