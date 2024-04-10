@@ -15,6 +15,8 @@ def tempConversion(tempValue):
 # Converts file to geojson of temperature
 def processFiles(filenameInput, filenameOutput):
 
+    cloudMaskFileName = filenameInput.replace("_L2_LSTE_", "_L2_CLOUD_")
+
     # Opens the file and gets box lat and long points as well as temp data
     with h5py.File(f"{filenameInput}", "r") as file:
         # Load bounding coordinates
@@ -26,6 +28,12 @@ def processFiles(filenameInput, filenameOutput):
         north = file["StandardMetadata/NorthBoundingCoordinate"][0]
         south = file["StandardMetadata/SouthBoundingCoordinate"][0]
 
+    with h5py.File(f"{cloudMaskFileName}", "r") as file:
+        # Load bounding coordinates
+        cloudMask = file["SDS"]["CloudMask"][:]
+        bit0CloudMask = np.bitwise_and(cloudMask, 1)
+        # bit1CloudMask = np.bitwise_and(cloudMask, 2)
+        bit1CloudMask = np.bitwise_and(cloudMask, 2) >> 1
 
     numOfRows, numOfCols = len(lstData), len(lstData[0])  # As mentioned in your data structure
 
@@ -56,12 +64,17 @@ def processFiles(filenameInput, filenameOutput):
             lat, lon = lats[i], longs[j]
 
             # Converts point to geojson form
-            if globe.is_land(lat, lon):
-                feature = geojson.Feature(
-                    geometry=geojson.Point((lon, lat)),
-                    properties={"LST": tempConversion(float(lstData[i, j]))}
-                )
-                features.append(feature)
+            if globe.is_land(lat, lon) and (bit0CloudMask[i, j] == 1 and bit1CloudMask[i, j] == 1):
+                convertedTempF = tempConversion(float(lstData[i, j]))
+                
+                if convertedTempF > -10:
+                    
+                    feature = geojson.Feature(
+                        geometry=geojson.Point((lon, lat)),
+                        properties={"LST": convertedTempF}
+                    )
+                    features.append(feature)
+                    
 
     # Get data ready to be written to file
     feature_collection = geojson.FeatureCollection(features)

@@ -1,13 +1,26 @@
-from processDataManager import downloadFile
+from processDataManager import downloadFile, checkIfFileInCSV
 from processData import processFiles
 from getData import getDataHelper, getDataCustomRange
 from datetime import datetime, timedelta
 from Averaging import AverageTempManager
 import time
+import csv
+import subprocess
+import os
 
 
-def main(startDate, endDate, dataPath, processedDataPath):
+def main(startDate, endDate, dataPath, processedDataPath, csvPath):
     timeStart = time.time()
+    csvData = []
+
+    if not os.path.exists(csvPath):
+        with open(csvPath, "w") as file:
+            pass
+    else:
+        with open(csvPath, "r") as file:
+            csvReader = csv.reader(file)
+            for row in csvReader:
+                csvData.extend(row)
 
     currentDate = datetime.strptime(startDate, "%Y-%m-%d")
     endDate = datetime.strptime(endDate, "%Y-%m-%d") + timedelta(days=0)
@@ -31,24 +44,50 @@ def main(startDate, endDate, dataPath, processedDataPath):
                 links = entry["links"]
                 downloadLink = links[0]["href"]
 
-                # Downlod the file
-                if downloadFile(downloadLink, f"{dataPath}/" + filename):
-                    filesToProcess.append(filename)
+                # Check if file is already found locally
+                if not checkIfFileInCSV(filename, csvData):
+                    # Downlod the file
+                    if downloadFile(downloadLink, f"{dataPath}/" + filename):
+                        # Download the cloud masking file
+                        cloudMaskLink = downloadLink.replace("ECO2LSTE.001", "ECO2CLD.001").replace("_L2_LSTE_", "_L2_CLOUD_")
+                        cloudMaskFileName = filename.replace("_L2_LSTE_", "_L2_CLOUD_")
+                        if downloadFile(cloudMaskLink, os.path.join(dataPath, cloudMaskFileName)):
+                            filesToProcess.append(filename)
+                            csvData.append(filename)
+                else:
+                    print("File already used")
 
 
             # process new data
-            for file in filesToProcess:
-                processFiles(f"{dataPath}/{file}", f"{processedDataPath}/" + file.replace(".h5", ".geojson"))
-                AverageTempManager(f"{processedDataPath}/" + file.replace(".h5", ".geojson"))
+        # process new data
+        for file in filesToProcess:
+            processFiles( os.path.join(dataPath, file), os.path.join( processedDataPath, file.replace(".h5", ".geojson") ) )
+            AverageTempManager(processedDataPath, os.path.join( processedDataPath, file.replace(".h5", ".geojson") ), file.replace(".h5", ".geojson") )
 
+
+                #  Write to csv
+            with open(csvPath, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(csvData)
 
     print(f"Time to execute in total {time.time() - timeStart}")
 
+    directory = "/projects/climate_data"
+    command = "publish_data ben/capstone_project"
+    result = subprocess.run(command, cwd=directory, shell=True, capture_output=True, text=True)
+
+    # Print the output
+    print(result.stdout)
+
 if __name__ == "__main__":
     currentTime = datetime.now()
-    startDate = "2019-09-16" # ISO format
-    endDate =  "2024-01-01"# ISO format
-    dataPath = "Data/"
-    processedDataPath = "ProcessedData/"
+    startDate = "2024-03-03" # ISO format
+    endDate =  "2024-04-06"# ISO format
+    # dataPath = "/scratch/zmh47/Data"
+    # processedDataPath = "/projects/climate_data/ben/capstone_project"
+    # csvPath = "/projects/climate_data/ben/capstone_project/data.csv"
+    dataPath = "Data"
+    processedDataPath = "ProcessedData"
+    csvPath = "ProcessedData/data.csv"
 
-    main(startDate, endDate, dataPath, processedDataPath)
+    main(startDate, endDate, dataPath, processedDataPath, csvPath)

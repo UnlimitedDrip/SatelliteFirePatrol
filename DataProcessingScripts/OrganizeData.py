@@ -35,8 +35,9 @@ def readFileName(filePath):
         fileTypes2 = {".geojson"}
 
         organizeDataByType(inputFolder, monthFolder, outputFolder1, outputFolder2, fileTypes1, fileTypes2)
+        return True
     else:
-        return None
+        return False
 
 def organizeDataByType(inputFolder, destinationFolder, outputFolder1, outputFolder2, fileTypes1, fileTypes2):
     # Iterate through files in the input folder

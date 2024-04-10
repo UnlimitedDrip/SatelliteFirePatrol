@@ -24,7 +24,7 @@ def AverageTempManager(directoryPath, filePath, newFileName):
     # Average with the new file
     AverageTemp(averageFileName, filePath)
 
-    return
+    return True
 
 def AverageTemp(averageTempFileName, newFileName):
     features = []
@@ -100,8 +100,8 @@ def CreateAverageTempFile(averageTempFileName):
 
     coordStep = .01
     latStart = 16.9
-    latEnd = 22.2
-    lonStart = -159.56
+    latEnd = 22.6
+    lonStart = -160.8
     lonEnd = -154.61
 
     # Create a feature collection from south west to northeast iterating by .01

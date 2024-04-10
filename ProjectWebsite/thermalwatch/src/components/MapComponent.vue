@@ -2,9 +2,31 @@
   <div id="map-container">
     <div id="map"></div>
   </div>
+    <div class = 'cal'>
+    <!-- <Datepicker 
+    circle
+    show-clear-button
+    v-model= "selectedDate"
+    :disabled-start-date="disabledStartDate"
+    :disabled-end-date="disabledEndDate" 
+    lang="en"
+    position = "top"
+    @change = "dateSelected"
+    >
+    </Datepicker> -->
+    <datepicker
+      v-model="selected"
+      :locale="locale"
+      :upperLimit="to"
+      :lowerLimit="from"
+      :disabled-dates="highlightedDates"
+      @update:modelValue="dateSelected"
+    />
+    
+  </div>
   <div class="map-overlay">
 
-    <select id="dropdown" @change="updateDataList($event)"></select>
+    <!-- <select id="dropdown" @change="updateDataList($event)"></select> -->
     <select id="dropdownYear" @change="updateYear($event)"></select>
 
     <div class="map-temp-info-container">
@@ -12,7 +34,7 @@
     </div>
 
     <div class="map-overlay-inner">
-    <h2 id="slider-text">Temperatures over 2023</h2>
+    <h2 id="slider-text">Temperatures over 2019</h2>
     <label id="month"></label>
     <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)">
   </div>
@@ -20,38 +42,47 @@
   <div class="map-overlay-inner">
     <div id="legend" class="legend">
       <div class="bar"></div>
-      <div>Celsius (c)</div>
+      <div> Fahrenheit (f)</div>
     </div>
   </div>
 
-    <VueDatePicker
-      v-model="selectedDate"
-      :highlighted="highlightedDates"
-      @selected="dateSelected"
-    />
 
   </div>
 </template>
 
 <script>
 import mapboxgl from 'mapbox-gl';
+import Datepicker from 'vue3-datepicker';
+import { enUS } from 'date-fns/locale';
 
 export default {
   data() {
     return {
-      dataList: [
-      "data/2023_01_average.geojson"
-      ],
+      locale: enUS, 
+      to: new Date(), //present day 
+      from: new Date(2019, 0, 1), // January 1st, 2019
+      highlightedDates: [],
+      disabledDates: {
+        dates: [
+          new Date(2019, 0, 2), // Disabling specific dates; Jan 2, 2019
+          new Date(2019, 1, 3)  // Feb 3, 2019. Remember, months are 0-indexed in JavaScript Dates
+        ]
+      },
+      preventDisableDateSelection: true,
+      selected: new Date(2019,0,1),
+      dataList: [],
       map: null,
       year: 2023,
       month: 1,
     };
   },
+  components: {
+    Datepicker
+  },
   methods: {
     updateDataList(event) {
       const selectedIndex = event.target.selectedIndex;
       const selectedValue = event.target.options[selectedIndex].value;
-      //this.dataList = ["data/" + selectedValue];
       this.fetchFile(selectedValue);
     },
     updateDataListSlider(event) {
@@ -72,9 +103,40 @@ export default {
       else {
         averageFilename = `${this.year}_0${this.month}_average.geojson`;
       }
-      // this.dataList = [averageFilename];
-      // this.reloadMapOverlay();
       this.fetchFile(averageFilename);
+    },
+    dateSelected(newDate) {
+      if( newDate )
+      {
+        // get date in form -> yyyymmdd
+        const year = newDate.getFullYear();
+        const month = String(newDate.getMonth() + 1).padStart(2, '0'); // getMonth() is zero-indexed
+        const day = String(newDate.getDate()).padStart(2, '0');
+        const date = `${year}${month}${day}`;
+
+        // Get date data
+        let files = this.getFilesFromDate(date)
+  
+        for(let index = 0; index < files.length; index++)
+        {
+          this.fetchFile(files[index])
+        }
+      }
+    },
+    getFilesFromDate(date)
+    {
+      if( !this.fileContent ) return;
+
+      const options = this.fileContent.split(',');
+
+      const matchingFiles = options.filter(option => {
+        const parts = option.split('_');
+        if (parts.length < 6) return false; 
+        const fileDate = parts[5].split('T')[0];
+        return fileDate === date;
+      });
+
+      return matchingFiles
     },
     reloadMapOverlay() {
 
@@ -101,7 +163,6 @@ export default {
           this.reloadMapOverlayHelper(data, index);
       });
     },
-
     reloadMapOverlayHelper(geojsonData, index) {
 
       const map = this.map;
@@ -150,9 +211,15 @@ export default {
             8, 2,
             10, 5,
             11, 10,
-            15, 50
+            15, 75,
           ],
-          'circle-opacity': 0.4
+          'circle-opacity':  [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            5, .4,
+            15, .7
+          ],
         }
       });
 
@@ -175,15 +242,15 @@ export default {
         if (!response.ok) throw new Error('Network response was not ok');
         this.fileContent = await response.text();
 
-        // Populate dropdown with all files
-        const dropdown = document.getElementById("dropdown");
         const options = this.fileContent.split(',')
-        console.log(options)
-        options.forEach(option => {
-          const optionElement = document.createElement("option");
-          optionElement.textContent = option;
-          dropdown.appendChild(optionElement);
-        });
+
+        // Populate dropdown with all files
+        // const dropdown = document.getElementById("dropdown");
+        // options.forEach(option => {
+        //   const optionElement = document.createElement("option");
+        //   optionElement.textContent = option;
+        //   dropdown.appendChild(optionElement);
+        // });
 
 
         // Populate yearly average dropdown
@@ -193,6 +260,8 @@ export default {
         const averageYears = averages.map( element => element.split("_")[0] )
         const uniqueAverageYears = Array.from(new Set(averageYears));
 
+        console.log(uniqueAverageYears);
+
         const dropdownYear = document.getElementById("dropdownYear");
 
         uniqueAverageYears.forEach(option => {
@@ -201,9 +270,13 @@ export default {
           dropdownYear.appendChild(optionElement);
         });
 
+        //fetch most recent file
+        this.fetchFile(options[ options.length - 1 ])
+
       } catch (error) {
         console.error('There was a problem fetching the file:', error);
       }
+
     },
     async fetchFile(filename) {
       
@@ -289,6 +362,14 @@ function filterByMonth(month) {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+  .cal {
+    position: relative; /* Set the position of the container */
+    top: 565px; /* Adjust the top position */
+    left: 10px; /* Adjust the left position */
+    
+  }
+
   body { margin: 0; padding: 0; }
 
   div {
