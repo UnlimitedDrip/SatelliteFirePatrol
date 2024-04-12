@@ -5,12 +5,15 @@ import geojson
 import json
 import os
 
+# Returns (true, averageTempFileName) if new average temp file was created
+# Returns (false, averageTempFileName) is no new file was created
 def AverageTempManager(directoryPath, filePath, newFileName):
 
     # Get year and month from file name
     baseParse = newFileName.split('_')[5].split('T')[0]
     year = baseParse[0:4]
     month = baseParse[4:6]
+    fileCreated = False
 
     print(f"Year: {year}\nMonth: {month}")
 
@@ -20,11 +23,12 @@ def AverageTempManager(directoryPath, filePath, newFileName):
     if not os.path.exists( f"{averageFileName}" ):
         # make the averaging file
         CreateAverageTempFile(averageFileName)
+        fileCreated = True
 
     # Average with the new file
     AverageTemp(averageFileName, filePath)
 
-    return True
+    return (fileCreated, averageFileName)
 
 def AverageTemp(averageTempFileName, newFileName):
     features = []

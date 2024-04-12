@@ -144,9 +144,12 @@ def manageData(dataFolderPath, processedDataFolderPath, csvFilePath):
     # process new data
     for file in filesToProcess:
         processFiles( os.path.join(dataFolderPath, file), os.path.join( processedDataFolderPath, file.replace(".h5", ".geojson") ) )
-        AverageTempManager(processedDataFolderPath, os.path.join( processedDataFolderPath, file.replace(".h5", ".geojson") ), file.replace(".h5", ".geojson") )
+        averageTempFileCreated, averageFileName = AverageTempManager(processedDataFolderPath,
+                                                                    os.path.join( processedDataFolderPath, file.replace(".h5", ".geojson") ),
+                                                                    file.replace(".h5", ".geojson") )
 
-
+        if averageTempFileCreated:
+            csvData.append(averageFileName)
     # for file in filesToProcess:
     #     readFileName(file)
 
