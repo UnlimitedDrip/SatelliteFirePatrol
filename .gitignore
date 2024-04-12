@@ -3,5 +3,6 @@
 *.h5
 *.geojson
 *.zip
+dataConfig.json
 node_modules/
 __pycache__/
