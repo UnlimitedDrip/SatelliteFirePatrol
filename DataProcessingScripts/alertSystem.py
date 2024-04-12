@@ -4,6 +4,9 @@ import geojson
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from sib_api_v3_sdk import ApiClient, Configuration
+from sib_api_v3_sdk.api.transactional_emails_api import TransactionalEmailsApi
+from sib_api_v3_sdk.models.send_smtp_email import SendSmtpEmail
 
 
 
@@ -57,7 +60,9 @@ def isPointInBoundingBox(pointLon, pointLat, boundingBox):
     return False
 
 
-def sendAlerts(alert, alertTriggeredCount, geojsonFileName):
+def sendAlerts(alert, alertTriggeredCount, geojsonFileName, sendMessage=True):
+    apiKey = ""
+
     # Get base stats of geojson file
     months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     baseParse = geojsonFileName.split('_')[5].split('T')
@@ -72,20 +77,68 @@ def sendAlerts(alert, alertTriggeredCount, geojsonFileName):
     sec = timeParse[4:6]
 
     # Construct alert string
+    header = "Hello,"
+    bodyIntro = "Your alert"
     latStart, latEnd, lonStart, lonEnd = alert["Bounding Box"]
-    alertString = f"Hello,\n\n\nYour alert \n\n\tlatitude start	→ {latStart}\n\tlatitude end	→ {latEnd}\n\tlongitude start	→ {lonStart}\n\tlongitude end	→ {lonEnd}\n\nhas been triggered on {month} {day}, {year} at {hour}:{min}:{sec} with {alertTriggeredCount} points exceeding temperature threshold ({alert['Temperature Threshold']})"
+
+    alertInfo = (f"has been triggered on {month} {day}, {year} at {hour}:{min}:{sec} with {alertTriggeredCount} points exceeding temperature threshold ({alert['Temperature Threshold']})")
+    # alertString = f"Hello,\n\n\nYour alert \n\n\tlatitude start	→ {latStart}\n\tlatitude end	→ {latEnd}\n\tlongitude start	→ {lonStart}\n\tlongitude end	→ {lonEnd}\n\nhas been triggered on {month} {day}, {year} at {hour}:{min}:{sec} with {alertTriggeredCount} points exceeding temperature threshold ({alert['Temperature Threshold']})"
+
+    htmlMessage = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>Alert Message</title>
+    <style>
+      pre {{
+        white-space: pre-wrap;
+        font-family: monospace;
+      }}
+    </style>
+    </head>
+    <body>
+    <pre>
+    {header}
+
+    {bodyIntro}
+
+        latitude start	→ {latStart}
+        latitude end	→ {latEnd}
+        longitude start	→ {lonStart}
+        longitude end	→ {lonEnd}
+
+    {alertInfo}
+    </pre>
+    </body>
+    </html>
+    """
 
 
-    username = 'thermalwatch25@gmail.com'
-    password = '@|IIDK,k!_6)A.RJ+q[?'
+    if sendMessage:
+        # Configure API key authorization
+        configuration = Configuration()
+        configuration.api_key['api-key'] = apiKey
 
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(username, password)
+        # Create an instance of the API class
+        api_instance = TransactionalEmailsApi(ApiClient(configuration))
+        send_smtp_email = SendSmtpEmail(
+            to=[{"email": alert["Email"], "name": "N/A"}],
+            sender={"email": "thermalwatch25@gmail.com", "name": "ThermalWatch"},
+            subject="Alert Triggered",
+            html_content=f"{htmlMessage}"
+        )
+
+        try:
+            # Send the email
+            api_response = api_instance.send_transac_email(send_smtp_email)
+            print(api_response)
+        except Exception as e:
+            print("An exception occurred when calling TransactionalEmailsApi->send_transac_email: %s\n" % e)
 
 
-    # Send alert
-    print(f"Sent Alert: \n{alertString}")
+        # Send alert
+        print(f"Sent Alert: \n{htmlMessage}")
 
 
 
