@@ -9,6 +9,7 @@
 
 module load anaconda3
 conda activate capstone
-python processDataManager.py
+python alertSystemManager.py # Get alert system database
+python processDataManager.py # Process new data
 
 sbatch --begin=now+24hours $0
