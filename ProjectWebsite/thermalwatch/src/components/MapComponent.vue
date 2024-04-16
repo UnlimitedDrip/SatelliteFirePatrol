@@ -44,6 +44,8 @@
       <div class="bar"></div>
       <div> Fahrenheit (f)</div>
     </div>
+    <button @click="downloadCurrentGeoJSON()">Download GeoJSON</button>
+
   </div>
 
 
@@ -61,13 +63,6 @@ export default {
       locale: enUS, 
       to: new Date(), //present day 
       from: new Date(2019, 0, 1), // January 1st, 2019
-      highlightedDates: [],
-      disabledDates: {
-        dates: [
-          new Date(2019, 0, 2), // Disabling specific dates; Jan 2, 2019
-          new Date(2019, 1, 3)  // Feb 3, 2019. Remember, months are 0-indexed in JavaScript Dates
-        ]
-      },
       preventDisableDateSelection: true,
       selected: new Date(2019,0,1),
       dataList: [],
@@ -80,11 +75,6 @@ export default {
     Datepicker
   },
   methods: {
-    updateDataList(event) {
-      const selectedIndex = event.target.selectedIndex;
-      const selectedValue = event.target.options[selectedIndex].value;
-      this.fetchFile(selectedValue);
-    },
     updateDataListSlider(event) {
       var monthVal = Number(event.target.value)+1;
       this.month = monthVal;
@@ -98,6 +88,7 @@ export default {
     updateAverageOverlayHelper() {
       const prefix = this.month >= 10 ? "" : "0";
       const averageFilename = `${this.year}_${prefix}${this.month}_average.geojson`;
+      this.dataList = [averageFilename];
       this.fetchFile(averageFilename);
     },
     dateSelected(newDate) {
@@ -108,9 +99,11 @@ export default {
         // Get date data
         let files = this.getFilesFromDate(date) 
   
+        this.dataList = [] 
         for(let index = 0; index < files.length; index++)
         {
           this.fetchFileMutliple(files[index], index)
+          this.dataList.push(files[index])
         }
       }
     },
@@ -235,15 +228,6 @@ export default {
 
         const options = this.fileContent.split(',')
 
-        // Populate dropdown with all files
-        // const dropdown = document.getElementById("dropdown");
-        // options.forEach(option => {
-        //   const optionElement = document.createElement("option");
-        //   optionElement.textContent = option;
-        //   dropdown.appendChild(optionElement);
-        // });
-
-
         // Populate yearly average dropdown
         const averages = options.filter( element => element.startsWith('20') )
 
@@ -278,30 +262,14 @@ export default {
         const geojsonData = await response.json(); // Parse the GeoJSON data
 
         this.reloadMapOverlayHelper(geojsonData, 0); 
+        this.dataList = [filename];
       } catch (error) {
         console.error('There was a problem fetching the GeoJSON file:', error);
       }
 
     },
     async fetchFileMutliple(filename, index) {
-      const map = this.map;
-      if (!map) return;
-        // remove old layers
-      map.getStyle().layers.forEach((layer) => {
-        if (layer.id.startsWith('temperature-circles')) {
-          map.removeLayer(layer.id);
-        }
-      });
-
-      const existingSources = map.getStyle().sources;
-      // Remove existing sources
-      if (existingSources) {
-        Object.keys(existingSources).forEach((sourceId) => {
-          if (sourceId.startsWith('lst')) {
-            map.removeSource(sourceId);
-          }
-        });
-      }
+      this.removeOldLayers();
 
       try {
         const targetUrl = `http://localhost:3000/api/geojson/${filename}`;
@@ -312,6 +280,31 @@ export default {
         this.reloadMapOverlayHelper(geojsonData, index, false); 
       } catch (error) {
         console.error('There was a problem fetching the GeoJSON file:', error);
+      }
+
+    },
+    async downloadCurrentGeoJSON() {
+      for( let index = 0; index < this.dataList.length; index++ )
+      {
+        let filename = this.dataList[index];
+        console.log(`Attempting to download ${filename}`)
+        try {
+          const url = `http://localhost:3000/api/geojson/${filename}`;  
+          const response = await fetch(url);
+          const data = await response.json();
+          const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(downloadUrl);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error('Failed to download GeoJSON', error);
+        }
+
       }
 
     }
