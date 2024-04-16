@@ -96,35 +96,31 @@ export default {
       this.updateAverageOverlayHelper()
     },
     updateAverageOverlayHelper() {
-      let averageFilename = ""
-      if (this.month >=10 ){
-        averageFilename = `${this.year}_${this.month}_average.geojson`;
-      }
-      else {
-        averageFilename = `${this.year}_0${this.month}_average.geojson`;
-      }
+      const prefix = this.month >= 10 ? "" : "0";
+      const averageFilename = `${this.year}_${prefix}${this.month}_average.geojson`;
       this.fetchFile(averageFilename);
     },
     dateSelected(newDate) {
       if( newDate )
       {
         // get date in form -> yyyymmdd
-        const year = newDate.getFullYear();
-        const month = String(newDate.getMonth() + 1).padStart(2, '0'); // getMonth() is zero-indexed
-        const day = String(newDate.getDate()).padStart(2, '0');
-        const date = `${year}${month}${day}`;
-
+        const date = this.formatDate(newDate);
         // Get date data
-        let files = this.getFilesFromDate(date)
+        let files = this.getFilesFromDate(date) 
   
         for(let index = 0; index < files.length; index++)
         {
-          this.fetchFile(files[index])
+          this.fetchFileMutliple(files[index], index)
         }
       }
     },
-    getFilesFromDate(date)
-    {
+    formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
+    },
+    getFilesFromDate(date){
       if( !this.fileContent ) return;
 
       const options = this.fileContent.split(',');
@@ -138,8 +134,7 @@ export default {
 
       return matchingFiles
     },
-    reloadMapOverlay() {
-
+    removeOldLayers() {
       const map = this.map;
       if (!map) return;
 
@@ -159,30 +154,26 @@ export default {
           }
         });
       }
-      this.dataList.forEach((data, index) => {
-          this.reloadMapOverlayHelper(data, index);
-      });
     },
-    reloadMapOverlayHelper(geojsonData, index) {
+    reloadMapOverlay() {
 
       const map = this.map;
       if (!map) return;
 
-      // remove old layers
-      map.getStyle().layers.forEach((layer) => {
-        if (layer.id.startsWith('temperature-circles')) {
-          map.removeLayer(layer.id);
-        }
-      });
+      this.removeOldLayers();
 
-      const existingSources = map.getStyle().sources;
-      // Remove existing sources
-      if (existingSources) {
-        Object.keys(existingSources).forEach((sourceId) => {
-          if (sourceId.startsWith('lst')) {
-            map.removeSource(sourceId);
-          }
-        });
+      this.dataList.forEach((data, index) => {
+          this.reloadMapOverlayHelper(data, index);
+      });
+    },
+    reloadMapOverlayHelper(geojsonData, index, removeOldLayersFlag=true) {
+
+      const map = this.map;
+      if (!map) return;
+
+      if(removeOldLayersFlag)
+      {
+        this.removeOldLayers()
       }
       map.addSource('lst' + index, {
         type: 'geojson',
@@ -291,7 +282,40 @@ export default {
         console.error('There was a problem fetching the GeoJSON file:', error);
       }
 
+    },
+    async fetchFileMutliple(filename, index) {
+      const map = this.map;
+      if (!map) return;
+        // remove old layers
+      map.getStyle().layers.forEach((layer) => {
+        if (layer.id.startsWith('temperature-circles')) {
+          map.removeLayer(layer.id);
+        }
+      });
+
+      const existingSources = map.getStyle().sources;
+      // Remove existing sources
+      if (existingSources) {
+        Object.keys(existingSources).forEach((sourceId) => {
+          if (sourceId.startsWith('lst')) {
+            map.removeSource(sourceId);
+          }
+        });
+      }
+
+      try {
+        const targetUrl = `http://localhost:3000/api/geojson/${filename}`;
+        const response = await fetch(targetUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const geojsonData = await response.json(); // Parse the GeoJSON data
+
+        this.reloadMapOverlayHelper(geojsonData, index, false); 
+      } catch (error) {
+        console.error('There was a problem fetching the GeoJSON file:', error);
+      }
+
     }
+    
   },
   mounted() {
     mapboxgl.accessToken = 'pk.eyJ1IjoidW5saW1pdGVkZHJpcCIsImEiOiJjbHNqbDNyZHExbnhnMmttbmJzMGxnMHUyIn0._TP9MLLTlUfbizgm0jvYDw';
