@@ -9,8 +9,11 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const app = express();
+const path = require('path');
+const fs = require('fs');
 app.use(cors());
 
+// ===================== RECIEVING FUNCTIONS =====================
 
 // Get base data csv
 app.get('/api/data', async (req, res) => {
@@ -42,5 +45,46 @@ app.get('/api/geojson/:filename', async (req, res) => {
     }
 });
 
+// ===================== SENDING FUNCTIONS =====================
+
+app.use(express.static('public'));
+app.get('/alertsystem', (req, res) => {
+    console.log("Recieved request for alert system");
+    const apiKey = req.headers['api-key'];
+    let jsonData = null;
+
+    // Get api key from config file
+    try {
+        const data = fs.readFileSync('../../DataProcessingScripts/dataConfig.json', 'utf8');
+        jsonData = JSON.parse(data);
+        console.log(jsonData);
+    } catch (error) {
+        console.error('Error reading the JSON file:', error);
+    }
+
+    // Check if api key matches
+    if ( apiKey === jsonData["AWSApiKey"])
+    {
+        console.log("API key validated");
+        // Get path
+        const filePath = path.join(__dirname, 'alertSystemStorage.json');
+        // send file
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.log('Error sending file:', err);
+                res.status(500).send('Failed to send file');
+            } else {
+                console.log('File sent successfully');
+            }
+        });
+    }
+    else {
+        res.status(403).send('Failed to send file');
+    }
+
+});
+
+
+// ===================== SET UP FUNCTIONS =====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
