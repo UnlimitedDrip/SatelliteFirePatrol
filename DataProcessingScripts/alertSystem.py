@@ -43,7 +43,7 @@ def checkForAlerts(geojsonFilePath, alertFilePath):
 
                 #  Check if point is above temp Threshold
                 if temperature > alertTempThreshold:
-                    #  Incrememnt alertTriggered
+                    #  Increment alertTriggered
                     alertTriggeredCount += 1
 
         if alertTriggeredCount > 0:

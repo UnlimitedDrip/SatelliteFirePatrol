@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@popperjs/core": "^2.11.8",
     "@vuepic/vue-datepicker": "^8.3.1",
     "core-js": "^3.8.3",
