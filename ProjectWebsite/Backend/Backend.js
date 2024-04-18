@@ -8,10 +8,12 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const app = express();
+const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
+const app = express();
 app.use(cors());
+app.use(bodyParser.json());
 
 // ===================== RECIEVING FUNCTIONS =====================
 
@@ -84,6 +86,62 @@ app.get('/alertsystem', (req, res) => {
 
 });
 
+// ===================== POSTING FUNCTIONS =====================
+
+app.post('/add-alert', (req, res) => {
+    const data = req.body;
+    const filePath = 'alertSystemStorage.json';
+    let validationFlag = false;
+    let expectedKeys = ["Bounding Box", "Temperature Threshold", "Email"]
+    console.log("Recieved Add Alert Request");
+
+    // Check if data is in correct form
+
+
+    try 
+    {
+        if( Object.keys(data).length != 3 || !hasRequiredKeys(data, expectedKeys) 
+            || !isNumber(data["Temperature Threshold"]) || data["Bounding Box"].length != 4)
+        {
+            return res.status(406).send({ message: 'Data failed validation' });
+        }
+    }
+    catch( error )
+    {
+        if (error) return res.status(406).send({ message: 'Data failed validation' });
+    }
+
+    
+
+    // Read the existing JSON file
+    fs.readFile(filePath, (err, fileData) => {
+        if (err && err.code === 'ENOENT') {
+        // File does not exist, create it with the first alert
+        fs.writeFile(filePath, JSON.stringify([data]), (err) => {
+            if (err) return res.status(500).send({ message: 'Error saving data' });
+            return res.send({ message: 'Alert added successfully' });
+        });
+        } else {
+        // File exists, parse it and add the new alert
+        const alerts = JSON.parse(fileData);
+        alerts.push(data);
+        fs.writeFile(filePath, JSON.stringify(alerts), (err) => {
+            if (err) return res.status(500).send({ message: 'Error saving data' });
+            return res.send({ message: 'Alert added successfully' });
+        });
+        }
+    });
+});
+
+function hasRequiredKeys(jsonObject, requiredKeys) {
+    return requiredKeys.every(key => key in jsonObject);
+}
+
+function isNumber(value) {
+    return typeof value === 'number';
+}
+
+  
 
 // ===================== SET UP FUNCTIONS =====================
 const PORT = process.env.PORT || 3000;

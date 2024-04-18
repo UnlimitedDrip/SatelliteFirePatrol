@@ -1,61 +1,66 @@
 <template>
-  <div id="map-container">
-    <div id="map"></div>
-  </div>
-    <div class = 'cal'>
-    <!-- <Datepicker 
-    circle
-    show-clear-button
-    v-model= "selectedDate"
-    :disabled-start-date="disabledStartDate"
-    :disabled-end-date="disabledEndDate" 
-    lang="en"
-    position = "top"
-    @change = "dateSelected"
-    >
-    </Datepicker> -->
-    <datepicker
-      v-model="selected"
-      :locale="locale"
-      :upperLimit="to"
-      :lowerLimit="from"
-      :disabled-dates="highlightedDates"
-      @update:modelValue="dateSelected"
-    />
-    
-  </div>
-  <div class="map-overlay">
+<div id="map-container">
+  <div id="map"></div>
+</div>
 
-    <!-- <select id="dropdown" @change="updateDataList($event)"></select> -->
-    <select id="dropdownYear" @change="updateYear($event)"></select>
+<div class="map-overlay">
+
+  <div class="map-overlay-item">
+    <div class='cal'>
+      <datepicker
+        v-model="selected"
+        :locale="locale"
+        :upperLimit="to"
+        :lowerLimit="from"
+        :disabled-dates="highlightedDates"
+        @update:modelValue="dateSelected"
+      />
+    </div>
 
     <div class="map-temp-info-container">
       <h2 class="temp-info" id="temp-info">55°F</h2>
     </div>
 
-    <div class="map-overlay-inner">
+    <select id="dropdownYear" @change="updateYear($event)"></select>
+
+  </div>
+
+
+  <div class="map-overlay-inner">
     <h2 id="slider-text">Temperatures over 2019</h2>
     <label id="month"></label>
     <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)">
   </div>
 
   <div class="map-overlay-inner">
+
     <div id="legend" class="legend">
       <div class="bar"></div>
       <div> Fahrenheit (f)</div>
     </div>
     <button @click="downloadCurrentGeoJSON()">Download GeoJSON</button>
+    <button id="create-alert-button" @click="createAlert()">Create an Alert</button>
+
+    <div class="number-input-container">
+      <label for="numberInput">Enter a temperature threshold</label>
+      <input type="number" id="numberInput" name="numberInput">
+      <button type="submit" @click="submitAlert()">Submit</button>
+      <p>Click a drag to draw a rectangle and enter a temperature max. If the temperature threshold is exceeded, you will be emailed</p>
+    </div>
+
 
   </div>
 
+</div>
 
-  </div>
 </template>
 
 <script>
 import mapboxgl from 'mapbox-gl';
 import Datepicker from 'vue3-datepicker';
 import { enUS } from 'date-fns/locale';
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+
 
 export default {
   data() {
@@ -69,6 +74,10 @@ export default {
       map: null,
       year: 2023,
       month: 1,
+      latStart: null,
+      latEnd: null,
+      lonStart: null,
+      lonEnd: null,
     };
   },
   components: {
@@ -218,6 +227,169 @@ export default {
       });
 
     },
+    createAlert() {
+      const map = this.map;
+      if (!map) return;
+      // remove old layers
+      map.getStyle().layers.forEach((layer) => {
+        if (layer.id.startsWith('rectangle')) {
+          console.log("rah")
+          map.removeLayer(layer.id);
+        }
+      });
+      const existingSources = map.getStyle().sources;
+      // Remove existing sources
+      if (existingSources) {
+        Object.keys(existingSources).forEach((sourceId) => {
+          if (sourceId.startsWith('rectangle')) {
+            map.removeSource(sourceId);
+          }
+        });
+      }
+
+      // Check if creating or canceling
+      if(this.drawingRectangle)
+      {
+        document.getElementById('create-alert-button').innerText = 'Create an Alert';
+        document.querySelector('.number-input-container').style.display = 'none';
+        this.drawingRectangle = false;
+      }
+      else 
+      {
+        document.getElementById('create-alert-button').innerText = 'Cancel Alert';
+        document.querySelector('.number-input-container').style.display = 'block';
+  
+        this.drawingRectangle = true;
+        this.map.on('mousedown', this.onMouseDown);
+        this.map.once('mouseup', this.onMouseUp);
+      }
+    },
+    onMouseDown(e) {
+      
+      if(!this.drawingRectangle) return;
+
+      // Prevent the default map drag behavior
+      this.map.dragPan.disable();
+
+      // Record the start position
+      this.start = e.lngLat;
+
+      // Add a temporary rectangle to the map 
+      this.map.addSource('rectangle', {
+          type: 'geojson',
+          data: {
+              type: 'Feature',
+              geometry: {
+                  type: 'Polygon',
+                  coordinates: [[
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat] 
+                  ]]
+              }
+          }
+      });
+
+      // Add rectangle as layer
+      this.map.addLayer({
+          id: 'rectangle',
+          type: 'fill',
+          source: 'rectangle',
+          layout: {},
+          paint: {
+              'fill-color': '#088',
+              'fill-opacity': 0.5
+          }
+      });
+
+      // Listen for mouse movement to update the rectangle
+      this.map.on('mousemove', this.onMouseMove);
+    },  
+    onMouseMove(e) {
+      // Update the rectangle's coordinates based on the current pointer location
+      const current = e.lngLat;
+      const coordinates = this.map.getSource('rectangle')._data.geometry.coordinates[0];
+      coordinates[1] = [current.lng, this.start.lat];
+      coordinates[2] = [current.lng, current.lat];
+      coordinates[3] = [this.start.lng, current.lat];
+      coordinates[4] = [this.start.lng, this.start.lat]; 
+
+      this.latStart = Math.min(this.start.lat, current.lat);
+      this.latEnd = Math.max(this.start.lat, current.lat);
+      this.lonStart = Math.min(this.start.lng, current.lng);
+      this.lonEnd = Math.max(this.start.lng, current.lng);
+      
+      this.map.getSource('rectangle').setData({
+          type: 'Feature',
+          geometry: {
+              type: 'Polygon',
+              coordinates: [coordinates]
+          }
+      });
+    },
+    onMouseUp() {
+      // Remove the temporary event listeners
+      this.map.off('mousemove', this.onMouseMove);
+
+      // Allow the map to be panned again
+      this.map.dragPan.enable();
+
+      // Set drawing mode to false
+      this.drawingRectangle = false;
+
+      // Optionally, handle the rectangle (e.g., make an API call or update the state)
+    },
+    submitAlert() {
+
+      // TODO: Check if user signed in
+
+      const map = this.map;
+      if (!map) return;
+      // remove old layers
+      map.getStyle().layers.forEach((layer) => {
+        if (layer.id.startsWith('rectangle')) {
+          console.log("rah")
+          map.removeLayer(layer.id);
+        }
+      });
+      const existingSources = map.getStyle().sources;
+      // Remove existing sources
+      if (existingSources) {
+        Object.keys(existingSources).forEach((sourceId) => {
+          if (sourceId.startsWith('rectangle')) {
+            map.removeSource(sourceId);
+          }
+        });
+      }
+      
+      document.querySelector('.number-input-container').style.display = 'none';
+
+      // Add Alert to database
+      let boundingBox = [this.latStart, this.latEnd, this.lonStart, this.lonEnd];
+      let temperatureThreshold =  Number(document.getElementById('numberInput').value);
+      
+      let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": ""};
+
+      fetch('http://localhost:3000/add-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonObject)
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+
+      this.latStart = null;
+      this.latEnd = null;
+      this.lonStart = null;
+      this.lonEnd = null;
+
+      document.getElementById('create-alert-button').innerText = 'Create an Alert';
+    },
     async fetchDataCsv() {
       try {
         // Update the target URL to the endpoint of your Node.js backend server
@@ -336,6 +508,7 @@ export default {
     // Load data 
     map.on('load', () => {
       this.map = map; // Assigning map to a component property for future reference
+
       this.reloadMapOverlay(); // Initial load of map overlay
     });
 
@@ -380,69 +553,98 @@ function filterByMonth(month) {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-  .cal {
-    position: relative; /* Set the position of the container */
-    top: 565px; /* Adjust the top position */
-    left: 10px; /* Adjust the left position */
-    
-  }
+@import url('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css');
 
-  body { margin: 0; padding: 0; }
+body {
+  margin: 0;
+  padding: 0;
+}
 
-  div {
-    display: block;
-  }
+#map-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
 
-  footer {
-    background-color: #283618;
-    height: 10vh;
-  }
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
 
-  #map-container{
-    position: fixed;
-    width: 100%;
-    height: 100%;
-  }
-  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 25%;
+  padding: 10px;
+  margin: 10px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  background: white;
+  border: 2.5px solid black;
+  border-radius: 10px;
+}
 
 
-  .map-overlay {
-    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    position: absolute;
-    width: 25%;
-    bottom: 0;
-    left: 0;
-    padding: 10px
-  }
+.map-overlay-item {
+  margin: 10px;
+}
 
-  .map-overlay .map-overlay-inner {
+
+.map-overlay-inner {
   background-color: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   padding: 10px;
-  margin-bottom: 10px;
-  }
+  margin: 10px;
+  border: 2.5px solid black;
+}
 
-  .map-overlay h2 {
+.map-overlay h2 {
   line-height: 24px;
-  display: block;
   margin: 0 0 10px;
-  }
+}
 
-  .map-overlay .legend .bar {
+.map-overlay .legend .bar {
   height: 10px;
   width: 100%;
-  /* background: linear-gradient(to right, #fca107, #7f3121); */
   background: linear-gradient(to right, #313695, #009966, #d73027, #A020F0);
-  }
+}
 
-  .map-overlay input {
+.map-overlay input {
   background-color: transparent;
-  display: inline-block;
   width: 100%;
-  position: relative;
   margin: 0;
   cursor: ew-resize;
-  }
+}
+
+.number-input-container {
+  display: none;
+  padding: 10px;
+  background: #FFF;
+  width: 200px;
+}
+
+.number-input-container input, .number-input-container button {
+  width: 100%;
+  border: 1px solid #000;
+}
+
+.number-input-container button {
+  background-color: #007BFF;
+  color: white;
+  cursor: pointer;
+}
+
+.number-input-container button:hover {
+  background-color: #0056b3;
+}
+
+footer {
+  background-color: #283618;
+  height: 10vh;
+}
+
 
 </style>
