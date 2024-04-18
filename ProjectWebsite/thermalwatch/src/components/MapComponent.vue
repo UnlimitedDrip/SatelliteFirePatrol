@@ -390,7 +390,29 @@ export default {
 
       document.getElementById('create-alert-button').innerText = 'Create an Alert';
     },
+    async getAlerts(id) {
+      const targetUrl = `http://localhost:3000/api/getalerts/${id}`;
+      const response = await fetch(targetUrl);
+      let alertArray = await response.text();
+      
+      console.log(alertArray)
+    },    
+    async removeAlert(alert) {
+      fetch('http://localhost:3000/remove-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(alert)
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+    },
     async fetchDataCsv() {
+      await this.getAlerts("zhallemeyer@gmail.com");
+      await this.removeAlert({"Bounding Box":[16.9,22.6,-160.8,-154.61],"Temperature Threshold":80,"Email":"zhallemeyer@gmail.com"});
+      await this.getAlerts("zhallemeyer@gmail.com");
       try {
         // Update the target URL to the endpoint of your Node.js backend server
         const targetUrl = 'http://localhost:3000/api/data';
