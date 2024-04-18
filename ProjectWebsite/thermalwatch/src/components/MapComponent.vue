@@ -19,7 +19,7 @@
       :locale="locale"
       :upperLimit="to"
       :lowerLimit="from"
-      :disabled-dates="highlightedDates"
+      :disabled-dates="disabledDates"
       @update:modelValue="dateSelected"
     />
     
@@ -64,8 +64,8 @@ export default {
       highlightedDates: [],
       disabledDates: {
         dates: [
-          new Date(2019, 0, 2), // Disabling specific dates; Jan 2, 2019
-          new Date(2019, 1, 3)  // Feb 3, 2019. Remember, months are 0-indexed in JavaScript Dates
+          // new Date(2019, 0, 2), // Disabling specific dates; Jan 2, 2019
+          // new Date(2019, 1, 3)  // Feb 3, 2019. Remember, months are 0-indexed in JavaScript Dates
         ]
       },
       preventDisableDateSelection: true,
@@ -116,11 +116,34 @@ export default {
 
         // Get date data
         let files = this.getFilesFromDate(date)
-  
+        console.log(date);
+        console.log(files);
+
         for(let index = 0; index < files.length; index++)
         {
           this.fetchFile(files[index])
         }
+      }
+    },
+    async setDisabledDates() {
+      // Set starting date and end date we want to disable data for
+      let start = new Date("01/01/2019");
+      let end = new Date();
+
+      var date = new Date(start);
+      while(date <= end){  
+        // Convert date to string and get file data for that date
+        let dateStr = String(date.getFullYear()) + String(date.getMonth() + 1).padStart(2, '0') + String(date.getDate()).padStart(2, '0')
+        let files = this.getFilesFromDate(dateStr);
+
+        // If there is no file data for that date, disable it
+        if(files.length == 0){
+          this.disabledDates.dates.push(new Date(date));
+        }
+        
+        // Index to next date
+        var newDate = date.setDate(date.getDate() + 1);
+        date = new Date(newDate);
       }
     },
     getFilesFromDate(date)
@@ -260,8 +283,6 @@ export default {
         const averageYears = averages.map( element => element.split("_")[0] )
         const uniqueAverageYears = Array.from(new Set(averageYears));
 
-        console.log(uniqueAverageYears);
-
         const dropdownYear = document.getElementById("dropdownYear");
 
         uniqueAverageYears.forEach(option => {
@@ -273,6 +294,8 @@ export default {
         //fetch most recent file
         this.fetchFile(options[ options.length - 1 ])
 
+        // Set disabled dates from data
+        this.setDisabledDates()
       } catch (error) {
         console.error('There was a problem fetching the file:', error);
       }
@@ -321,7 +344,6 @@ export default {
       this.map = map; // Assigning map to a component property for future reference
       this.reloadMapOverlay(); // Initial load of map overlay
     });
-
   }
 }
 
@@ -364,9 +386,6 @@ function filterByMonth(month) {
 <style scoped>
 
   .cal {
-    position: relative; /* Set the position of the container */
-    top: 565px; /* Adjust the top position */
-    left: 10px; /* Adjust the left position */
     
   }
 
