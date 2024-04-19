@@ -12,7 +12,7 @@
         :locale="locale"
         :upperLimit="to"
         :lowerLimit="from"
-        :disabled-dates="highlightedDates"
+        :disabled-dates="disabledDates"
         @update:modelValue="dateSelected"
       />
     </div>
@@ -33,7 +33,6 @@
   </div>
 
   <div class="map-overlay-inner">
-
     <div id="legend" class="legend">
       <div class="bar"></div>
       <div> Fahrenheit (f)</div>
@@ -47,10 +46,7 @@
       <button type="submit" @click="submitAlert()">Submit</button>
       <p>Click a drag to draw a rectangle and enter a temperature max. If the temperature threshold is exceeded, you will be emailed</p>
     </div>
-
-
   </div>
-
 </div>
 
 </template>
@@ -59,7 +55,7 @@
 import mapboxgl from 'mapbox-gl';
 import Datepicker from 'vue3-datepicker';
 import { enUS } from 'date-fns/locale';
-import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+// import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 
 
 export default {
@@ -68,6 +64,9 @@ export default {
       locale: enUS, 
       to: new Date(), //present day 
       from: new Date(2019, 0, 1), // January 1st, 2019
+      disabledDates: {
+        dates: []
+      },
       preventDisableDateSelection: true,
       selected: new Date(2019,0,1),
       dataList: [],
@@ -114,6 +113,27 @@ export default {
           this.fetchFileMutliple(files[index], index)
           this.dataList.push(files[index])
         }
+      }
+    },
+    async setDisabledDates() {
+      // Set starting date and end date we want to disable data for
+      let start = new Date("01/01/2019");
+      let end = new Date();
+
+      var date = new Date(start);
+      while(date <= end){  
+        // Convert date to string and get file data for that date
+        let dateStr = this.formatDate(date);
+        let files = this.getFilesFromDate(dateStr);
+
+        // If there is no file data for that date, disable it
+        if(files.length == 0){
+          this.disabledDates.dates.push(new Date(date));
+        }
+        
+        // Index to next date
+        var newDate = date.setDate(date.getDate() + 1);
+        date = new Date(newDate);
       }
     },
     formatDate(date) {
@@ -439,8 +459,6 @@ export default {
         const averageYears = averages.map( element => element.split("_")[0] )
         const uniqueAverageYears = Array.from(new Set(averageYears));
 
-        console.log(uniqueAverageYears);
-
         const dropdownYear = document.getElementById("dropdownYear");
 
         uniqueAverageYears.forEach(option => {
@@ -452,6 +470,8 @@ export default {
         //fetch most recent file
         this.fetchFile(options[ options.length - 1 ])
 
+        // Set disabled dates from data
+        this.setDisabledDates()
       } catch (error) {
         console.error('There was a problem fetching the file:', error);
       }
@@ -543,7 +563,6 @@ export default {
 
       this.reloadMapOverlay(); // Initial load of map overlay
     });
-
   }
 }
 
