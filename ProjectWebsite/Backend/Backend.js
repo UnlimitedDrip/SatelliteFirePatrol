@@ -71,7 +71,14 @@ app.get('/api/getalerts/:id', async (req, res) => {
                 }
             }
 
-            res.send(foundAlerts);
+            if(foundAlerts.length > 0)
+            {
+                return res.status(200).send(foundAlerts);
+            }
+            else 
+            {
+                return res.status(200).send({ message: 'No alerts found' });
+            }
         }
     });
 

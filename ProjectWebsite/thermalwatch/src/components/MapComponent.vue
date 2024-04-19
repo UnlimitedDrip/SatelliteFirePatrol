@@ -391,11 +391,21 @@ export default {
       document.getElementById('create-alert-button').innerText = 'Create an Alert';
     },
     async getAlerts(id) {
-      const targetUrl = `http://localhost:3000/api/getalerts/${id}`;
-      const response = await fetch(targetUrl);
-      let alertArray = await response.text();
-      
-      console.log(alertArray)
+      try {
+        const targetUrl = `http://localhost:3000/api/getalerts/${id}`;
+        const response = await fetch(targetUrl);
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+  
+        let alertArray = await response.text();
+        console.log(alertArray)
+      }
+      catch(error)
+      {
+        console.log("No alerts found")
+      }
     },    
     async removeAlert(alert) {
       fetch('http://localhost:3000/remove-alert', {
