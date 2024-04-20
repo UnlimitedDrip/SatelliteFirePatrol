@@ -43,7 +43,7 @@ def checkForAlerts(geojsonFilePath, alertFilePath):
 
                 #  Check if point is above temp Threshold
                 if temperature > alertTempThreshold:
-                    #  Incrememnt alertTriggered
+                    #  Increment alertTriggered
                     alertTriggeredCount += 1
 
         if alertTriggeredCount > 0:
@@ -61,7 +61,17 @@ def isPointInBoundingBox(pointLon, pointLat, boundingBox):
 
 
 def sendAlerts(alert, alertTriggeredCount, geojsonFileName, sendMessage=True):
+
+    # Get api key
     apiKey = ""
+    with open("dataConfig.json", "r") as dataConfigFile:
+        dataConfigData = json.load(dataConfigFile)
+        apiKey = dataConfigData["BrevoApiKey"]
+
+    #Return out of function if no api key is gotten
+    if apiKey == "":
+        print("No api key provided\nPlease add an api key to dataConfig.json")
+        return
 
     # Get base stats of geojson file
     months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]

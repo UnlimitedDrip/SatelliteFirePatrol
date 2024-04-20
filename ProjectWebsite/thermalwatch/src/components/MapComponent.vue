@@ -1,39 +1,32 @@
 <template>
-  <div id="map-container">
-    <div id="map"></div>
-  </div>
-    <div class = 'cal'>
-    <!-- <Datepicker 
-    circle
-    show-clear-button
-    v-model= "selectedDate"
-    :disabled-start-date="disabledStartDate"
-    :disabled-end-date="disabledEndDate" 
-    lang="en"
-    position = "top"
-    @change = "dateSelected"
-    >
-    </Datepicker> -->
-    <datepicker
-      v-model="selected"
-      :locale="locale"
-      :upperLimit="to"
-      :lowerLimit="from"
-      :disabled-dates="highlightedDates"
-      @update:modelValue="dateSelected"
-    />
-    
-  </div>
-  <div class="map-overlay">
+<div id="map-container">
+  <div id="map"></div>
+</div>
 
-    <!-- <select id="dropdown" @change="updateDataList($event)"></select> -->
-    <select id="dropdownYear" @change="updateYear($event)"></select>
+<div class="map-overlay">
+
+  <div class="map-overlay-item">
+    <div class='cal'>
+      <datepicker
+        v-model="selected"
+        :locale="locale"
+        :upperLimit="to"
+        :lowerLimit="from"
+        :disabled-dates="disabledDates"
+        @update:modelValue="dateSelected"
+      />
+    </div>
 
     <div class="map-temp-info-container">
       <h2 class="temp-info" id="temp-info">55°F</h2>
     </div>
 
-    <div class="map-overlay-inner">
+    <select id="dropdownYear" @change="updateYear($event)"></select>
+
+  </div>
+
+
+  <div class="map-overlay-inner">
     <h2 id="slider-text">Temperatures over 2019</h2>
     <label id="month"></label>
     <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)">
@@ -44,16 +37,28 @@
       <div class="bar"></div>
       <div> Fahrenheit (f)</div>
     </div>
-  </div>
+    <button @click="downloadCurrentGeoJSON()">Download GeoJSON</button>
+    <button id="create-alert-button" @click="createAlert()">Create an Alert</button>
 
-
+    <div class="number-input-container">
+      <label for="emailInput">Enter a valid email</label>
+      <input type="email" id="emailInput" name="emailInput">      
+      <label for="numberInput">Enter a temperature threshold in Fahrenheit</label>
+      <input type="number" id="numberInput" name="numberInput">
+      <button type="submit" @click="submitAlert()">Submit</button>
+      <p>Click a drag to draw a rectangle and enter a temperature max. If the temperature threshold is exceeded, you will be emailed</p>
+    </div>
   </div>
+</div>
+
 </template>
 
 <script>
 import mapboxgl from 'mapbox-gl';
 import Datepicker from 'vue3-datepicker';
 import { enUS } from 'date-fns/locale';
+// import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+
 
 export default {
   data() {
@@ -61,12 +66,8 @@ export default {
       locale: enUS, 
       to: new Date(), //present day 
       from: new Date(2019, 0, 1), // January 1st, 2019
-      highlightedDates: [],
       disabledDates: {
-        dates: [
-          new Date(2019, 0, 2), // Disabling specific dates; Jan 2, 2019
-          new Date(2019, 1, 3)  // Feb 3, 2019. Remember, months are 0-indexed in JavaScript Dates
-        ]
+        dates: []
       },
       preventDisableDateSelection: true,
       selected: new Date(2019,0,1),
@@ -74,17 +75,16 @@ export default {
       map: null,
       year: 2023,
       month: 1,
+      latStart: null,
+      latEnd: null,
+      lonStart: null,
+      lonEnd: null,
     };
   },
   components: {
     Datepicker
   },
   methods: {
-    updateDataList(event) {
-      const selectedIndex = event.target.selectedIndex;
-      const selectedValue = event.target.options[selectedIndex].value;
-      this.fetchFile(selectedValue);
-    },
     updateDataListSlider(event) {
       var monthVal = Number(event.target.value)+1;
       this.month = monthVal;
@@ -96,35 +96,55 @@ export default {
       this.updateAverageOverlayHelper()
     },
     updateAverageOverlayHelper() {
-      let averageFilename = ""
-      if (this.month >=10 ){
-        averageFilename = `${this.year}_${this.month}_average.geojson`;
-      }
-      else {
-        averageFilename = `${this.year}_0${this.month}_average.geojson`;
-      }
+      const prefix = this.month >= 10 ? "" : "0";
+      const averageFilename = `${this.year}_${prefix}${this.month}_average.geojson`;
+      this.dataList = [averageFilename];
       this.fetchFile(averageFilename);
     },
     dateSelected(newDate) {
       if( newDate )
       {
         // get date in form -> yyyymmdd
-        const year = newDate.getFullYear();
-        const month = String(newDate.getMonth() + 1).padStart(2, '0'); // getMonth() is zero-indexed
-        const day = String(newDate.getDate()).padStart(2, '0');
-        const date = `${year}${month}${day}`;
-
+        const date = this.formatDate(newDate);
         // Get date data
-        let files = this.getFilesFromDate(date)
+        let files = this.getFilesFromDate(date) 
   
+        this.dataList = [] 
         for(let index = 0; index < files.length; index++)
         {
-          this.fetchFile(files[index])
+          this.fetchFileMutliple(files[index], index)
+          this.dataList.push(files[index])
         }
       }
     },
-    getFilesFromDate(date)
-    {
+    async setDisabledDates() {
+      // Set starting date and end date we want to disable data for
+      let start = new Date("01/01/2019");
+      let end = new Date();
+
+      var date = new Date(start);
+      while(date <= end){  
+        // Convert date to string and get file data for that date
+        let dateStr = this.formatDate(date);
+        let files = this.getFilesFromDate(dateStr);
+
+        // If there is no file data for that date, disable it
+        if(files.length == 0){
+          this.disabledDates.dates.push(new Date(date));
+        }
+        
+        // Index to next date
+        var newDate = date.setDate(date.getDate() + 1);
+        date = new Date(newDate);
+      }
+    },
+    formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
+    },
+    getFilesFromDate(date){
       if( !this.fileContent ) return;
 
       const options = this.fileContent.split(',');
@@ -138,8 +158,7 @@ export default {
 
       return matchingFiles
     },
-    reloadMapOverlay() {
-
+    removeOldLayers() {
       const map = this.map;
       if (!map) return;
 
@@ -159,30 +178,26 @@ export default {
           }
         });
       }
-      this.dataList.forEach((data, index) => {
-          this.reloadMapOverlayHelper(data, index);
-      });
     },
-    reloadMapOverlayHelper(geojsonData, index) {
+    reloadMapOverlay() {
 
       const map = this.map;
       if (!map) return;
 
-      // remove old layers
-      map.getStyle().layers.forEach((layer) => {
-        if (layer.id.startsWith('temperature-circles')) {
-          map.removeLayer(layer.id);
-        }
-      });
+      this.removeOldLayers();
 
-      const existingSources = map.getStyle().sources;
-      // Remove existing sources
-      if (existingSources) {
-        Object.keys(existingSources).forEach((sourceId) => {
-          if (sourceId.startsWith('lst')) {
-            map.removeSource(sourceId);
-          }
-        });
+      this.dataList.forEach((data, index) => {
+          this.reloadMapOverlayHelper(data, index);
+      });
+    },
+    reloadMapOverlayHelper(geojsonData, index, removeOldLayersFlag=true) {
+
+      const map = this.map;
+      if (!map) return;
+
+      if(removeOldLayersFlag)
+      {
+        this.removeOldLayers()
       }
       map.addSource('lst' + index, {
         type: 'geojson',
@@ -234,7 +249,201 @@ export default {
       });
 
     },
+    createAlert() {
+      const map = this.map;
+      if (!map) return;
+      // remove old layers
+      map.getStyle().layers.forEach((layer) => {
+        if (layer.id.startsWith('rectangle')) {
+          console.log("rah")
+          map.removeLayer(layer.id);
+        }
+      });
+      const existingSources = map.getStyle().sources;
+      // Remove existing sources
+      if (existingSources) {
+        Object.keys(existingSources).forEach((sourceId) => {
+          if (sourceId.startsWith('rectangle')) {
+            map.removeSource(sourceId);
+          }
+        });
+      }
+
+      // Check if creating or canceling
+      if(this.drawingRectangle)
+      {
+        document.getElementById('create-alert-button').innerText = 'Create an Alert';
+        document.querySelector('.number-input-container').style.display = 'none';
+        this.drawingRectangle = false;
+      }
+      else 
+      {
+        document.getElementById('create-alert-button').innerText = 'Cancel Alert';
+        document.querySelector('.number-input-container').style.display = 'block';
+  
+        this.drawingRectangle = true;
+        this.map.on('mousedown', this.onMouseDown);
+        this.map.once('mouseup', this.onMouseUp);
+      }
+    },
+    onMouseDown(e) {
+      
+      if(!this.drawingRectangle) return;
+
+      // Prevent the default map drag behavior
+      this.map.dragPan.disable();
+
+      // Record the start position
+      this.start = e.lngLat;
+
+      // Add a temporary rectangle to the map 
+      this.map.addSource('rectangle', {
+          type: 'geojson',
+          data: {
+              type: 'Feature',
+              geometry: {
+                  type: 'Polygon',
+                  coordinates: [[
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat],
+                      [this.start.lng, this.start.lat] 
+                  ]]
+              }
+          }
+      });
+
+      // Add rectangle as layer
+      this.map.addLayer({
+          id: 'rectangle',
+          type: 'fill',
+          source: 'rectangle',
+          layout: {},
+          paint: {
+              'fill-color': '#088',
+              'fill-opacity': 0.5
+          }
+      });
+
+      // Listen for mouse movement to update the rectangle
+      this.map.on('mousemove', this.onMouseMove);
+    },  
+    onMouseMove(e) {
+      // Update the rectangle's coordinates based on the current pointer location
+      const current = e.lngLat;
+      const coordinates = this.map.getSource('rectangle')._data.geometry.coordinates[0];
+      coordinates[1] = [current.lng, this.start.lat];
+      coordinates[2] = [current.lng, current.lat];
+      coordinates[3] = [this.start.lng, current.lat];
+      coordinates[4] = [this.start.lng, this.start.lat]; 
+
+      this.latStart = Math.min(this.start.lat, current.lat);
+      this.latEnd = Math.max(this.start.lat, current.lat);
+      this.lonStart = Math.min(this.start.lng, current.lng);
+      this.lonEnd = Math.max(this.start.lng, current.lng);
+      
+      this.map.getSource('rectangle').setData({
+          type: 'Feature',
+          geometry: {
+              type: 'Polygon',
+              coordinates: [coordinates]
+          }
+      });
+    },
+    onMouseUp() {
+      // Remove the temporary event listeners
+      this.map.off('mousemove', this.onMouseMove);
+
+      // Allow the map to be panned again
+      this.map.dragPan.enable();
+
+      // Set drawing mode to false
+      this.drawingRectangle = false;
+
+      // Optionally, handle the rectangle (e.g., make an API call or update the state)
+    },
+    submitAlert() {
+
+      const map = this.map;
+      if (!map) return;
+      // remove old layers
+      map.getStyle().layers.forEach((layer) => {
+        if (layer.id.startsWith('rectangle')) {
+          console.log("rah")
+          map.removeLayer(layer.id);
+        }
+      });
+      const existingSources = map.getStyle().sources;
+      // Remove existing sources
+      if (existingSources) {
+        Object.keys(existingSources).forEach((sourceId) => {
+          if (sourceId.startsWith('rectangle')) {
+            map.removeSource(sourceId);
+          }
+        });
+      }
+      
+      document.querySelector('.number-input-container').style.display = 'none';
+
+      // Add Alert to database
+      let boundingBox = [this.latStart, this.latEnd, this.lonStart, this.lonEnd];
+      let temperatureThreshold =  Number(document.getElementById('numberInput').value);
+      let email =  document.getElementById('emailInput').value;
+      
+      let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": email};
+
+      fetch('http://localhost:3000/add-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonObject)
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+
+      this.latStart = null;
+      this.latEnd = null;
+      this.lonStart = null;
+      this.lonEnd = null;
+
+      document.getElementById('create-alert-button').innerText = 'Create an Alert';
+    },
+    async getAlerts(id) {
+      try {
+        const targetUrl = `http://localhost:3000/api/getalerts/${id}`;
+        const response = await fetch(targetUrl);
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+  
+        let alertArray = await response.text();
+        console.log(alertArray)
+      }
+      catch(error)
+      {
+        console.log("No alerts found")
+      }
+    },    
+    async removeAlert(alert) {
+      fetch('http://localhost:3000/remove-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(alert)
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+    },
     async fetchDataCsv() {
+      await this.getAlerts("zhallemeyer@gmail.com");
+      await this.removeAlert({"Bounding Box":[16.9,22.6,-160.8,-154.61],"Temperature Threshold":80,"Email":"zhallemeyer@gmail.com"});
+      await this.getAlerts("zhallemeyer@gmail.com");
       try {
         // Update the target URL to the endpoint of your Node.js backend server
         const targetUrl = 'http://localhost:3000/api/data';
@@ -244,23 +453,12 @@ export default {
 
         const options = this.fileContent.split(',')
 
-        // Populate dropdown with all files
-        // const dropdown = document.getElementById("dropdown");
-        // options.forEach(option => {
-        //   const optionElement = document.createElement("option");
-        //   optionElement.textContent = option;
-        //   dropdown.appendChild(optionElement);
-        // });
-
-
         // Populate yearly average dropdown
         const averages = options.filter( element => element.startsWith('20') )
 
         // Get averageYears from averages
         const averageYears = averages.map( element => element.split("_")[0] )
         const uniqueAverageYears = Array.from(new Set(averageYears));
-
-        console.log(uniqueAverageYears);
 
         const dropdownYear = document.getElementById("dropdownYear");
 
@@ -273,6 +471,8 @@ export default {
         //fetch most recent file
         this.fetchFile(options[ options.length - 1 ])
 
+        // Set disabled dates from data
+        this.setDisabledDates()
       } catch (error) {
         console.error('There was a problem fetching the file:', error);
       }
@@ -287,11 +487,53 @@ export default {
         const geojsonData = await response.json(); // Parse the GeoJSON data
 
         this.reloadMapOverlayHelper(geojsonData, 0); 
+        this.dataList = [filename];
       } catch (error) {
         console.error('There was a problem fetching the GeoJSON file:', error);
       }
 
+    },
+    async fetchFileMutliple(filename, index) {
+      this.removeOldLayers();
+
+      try {
+        const targetUrl = `http://localhost:3000/api/geojson/${filename}`;
+        const response = await fetch(targetUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const geojsonData = await response.json(); // Parse the GeoJSON data
+
+        this.reloadMapOverlayHelper(geojsonData, index, false); 
+      } catch (error) {
+        console.error('There was a problem fetching the GeoJSON file:', error);
+      }
+
+    },
+    async downloadCurrentGeoJSON() {
+      for( let index = 0; index < this.dataList.length; index++ )
+      {
+        let filename = this.dataList[index];
+        console.log(`Attempting to download ${filename}`)
+        try {
+          const url = `http://localhost:3000/api/geojson/${filename}`;  
+          const response = await fetch(url);
+          const data = await response.json();
+          const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(downloadUrl);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error('Failed to download GeoJSON', error);
+        }
+
+      }
+
     }
+    
   },
   mounted() {
     mapboxgl.accessToken = 'pk.eyJ1IjoidW5saW1pdGVkZHJpcCIsImEiOiJjbHNqbDNyZHExbnhnMmttbmJzMGxnMHUyIn0._TP9MLLTlUfbizgm0jvYDw';
@@ -319,9 +561,9 @@ export default {
     // Load data 
     map.on('load', () => {
       this.map = map; // Assigning map to a component property for future reference
+
       this.reloadMapOverlay(); // Initial load of map overlay
     });
-
   }
 }
 
@@ -363,69 +605,98 @@ function filterByMonth(month) {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-  .cal {
-    position: relative; /* Set the position of the container */
-    top: 565px; /* Adjust the top position */
-    left: 10px; /* Adjust the left position */
-    
-  }
+@import url('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css');
 
-  body { margin: 0; padding: 0; }
+body {
+  margin: 0;
+  padding: 0;
+}
 
-  div {
-    display: block;
-  }
+#map-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
 
-  footer {
-    background-color: #283618;
-    height: 10vh;
-  }
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
 
-  #map-container{
-    position: fixed;
-    width: 100%;
-    height: 100%;
-  }
-  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 25%;
+  padding: 10px;
+  margin: 10px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  background: white;
+  border: 2.5px solid black;
+  border-radius: 10px;
+}
 
 
-  .map-overlay {
-    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    position: absolute;
-    width: 25%;
-    bottom: 0;
-    left: 0;
-    padding: 10px
-  }
+.map-overlay-item {
+  margin: 10px;
+}
 
-  .map-overlay .map-overlay-inner {
+
+.map-overlay-inner {
   background-color: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   padding: 10px;
-  margin-bottom: 10px;
-  }
+  margin: 10px;
+  border: 2.5px solid black;
+}
 
-  .map-overlay h2 {
+.map-overlay h2 {
   line-height: 24px;
-  display: block;
   margin: 0 0 10px;
-  }
+}
 
-  .map-overlay .legend .bar {
+.map-overlay .legend .bar {
   height: 10px;
   width: 100%;
-  /* background: linear-gradient(to right, #fca107, #7f3121); */
   background: linear-gradient(to right, #313695, #009966, #d73027, #A020F0);
-  }
+}
 
-  .map-overlay input {
+.map-overlay input {
   background-color: transparent;
-  display: inline-block;
   width: 100%;
-  position: relative;
   margin: 0;
   cursor: ew-resize;
-  }
+}
+
+.number-input-container {
+  display: none;
+  padding: 10px;
+  background: #FFF;
+  width: 200px;
+}
+
+.number-input-container input, .number-input-container button {
+  width: 100%;
+  border: 1px solid #000;
+}
+
+.number-input-container button {
+  background-color: #007BFF;
+  color: white;
+  cursor: pointer;
+}
+
+.number-input-container button:hover {
+  background-color: #0056b3;
+}
+
+footer {
+  background-color: #283618;
+  height: 10vh;
+}
+
 
 </style>

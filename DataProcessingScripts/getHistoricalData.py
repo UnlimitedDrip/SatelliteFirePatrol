@@ -83,11 +83,25 @@ if __name__ == "__main__":
     currentTime = datetime.now()
     startDate = "2024-03-03" # ISO format
     endDate =  "2024-04-06"# ISO format
+
+    rawDataPath = ""
+    processedDataPath = ""
+    dataCsvPath = ""
+    startDate = ""
+    endDate = ""
+    with open("dataConfig.json", "r") as dataConfigFile:
+        dataConfigData = json.load(dataConfigFile)
+        rawDataPath = dataConfigData["RawDataPath"]
+        processedDataPath = dataConfigData["ProcessedDataPath"]
+        dataCsvPath = dataConfigData["DataCsvPath"]
+        startDate = dataConfigData["HistoricalStartDate"]
+        endDate = dataConfigData["HistoricalEndDate"]
+
     # dataPath = "/scratch/zmh47/Data"
     # processedDataPath = "/projects/climate_data/ben/capstone_project"
     # csvPath = "/projects/climate_data/ben/capstone_project/data.csv"
-    dataPath = "Data"
-    processedDataPath = "ProcessedData"
-    csvPath = "ProcessedData/data.csv"
+    # dataPath = "Data"
+    # processedDataPath = "ProcessedData"
+    # csvPath = "ProcessedData/data.csv"
 
-    main(startDate, endDate, dataPath, processedDataPath, csvPath)
+    main(startDate, endDate, rawDataPath, processedDataPath, dataCsvPath)

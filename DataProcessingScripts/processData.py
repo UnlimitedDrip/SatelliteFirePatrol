@@ -29,7 +29,7 @@ def processFiles(filenameInput, filenameOutput):
         south = file["StandardMetadata/SouthBoundingCoordinate"][0]
 
     with h5py.File(f"{cloudMaskFileName}", "r") as file:
-        # Load bounding coordinates
+        # Lo    ad bounding coordinates
         cloudMask = file["SDS"]["CloudMask"][:]
         bit0CloudMask = np.bitwise_and(cloudMask, 1)
         # bit1CloudMask = np.bitwise_and(cloudMask, 2)
@@ -54,7 +54,15 @@ def processFiles(filenameInput, filenameOutput):
 
     count = 0
     divider = lstData.shape[0]
+
+
+    # Get coordstep from config
     coordStep = 10
+    with open("dataConfig.json", "r") as dataConfigFile:
+        dataConfigData = json.load(dataConfigFile)
+        coordStep = int(dataConfigData["ProcessingDataCoordStep"])
+
+
     # Iterate through the LST data and convert each data point to a GeoJSON point feature
     for i in range(0, lstData.shape[0], coordStep):
         count += 1
@@ -66,15 +74,15 @@ def processFiles(filenameInput, filenameOutput):
             # Converts point to geojson form
             if globe.is_land(lat, lon) and (bit0CloudMask[i, j] == 1 and bit1CloudMask[i, j] == 1):
                 convertedTempF = tempConversion(float(lstData[i, j]))
-                
+
                 if convertedTempF > -10:
-                    
+
                     feature = geojson.Feature(
                         geometry=geojson.Point((lon, lat)),
                         properties={"LST": convertedTempF}
                     )
                     features.append(feature)
-                    
+
 
     # Get data ready to be written to file
     feature_collection = geojson.FeatureCollection(features)
