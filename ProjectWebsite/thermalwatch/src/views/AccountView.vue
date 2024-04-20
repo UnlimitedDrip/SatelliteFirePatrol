@@ -1,111 +1,58 @@
-<<<<<<< HEAD
-
-<template>
-    <div>
-      <meta name="google-signin-client_id" content="59031367616-kd650umcl23m9rvv9gk7onunk80c1u94.apps.googleusercontent.com">
-      <h1>Account</h1>
-      <div class="g-signin2" data-onsuccess="onSignIn"></div>
-      <a href="#" click="signOut();">Sign out</a>
-
-    </div>
-  </template>
-  
-  <script>
-  /* eslint-disable */
-  export default {
-    mounted() {
-      // Load the Google Platform Library
-      const script = document.createElement("script");
-      script.src = "https://apis.google.com/js/platform.js";
-      script.async = true;
-      script.async = true;
-      script.onload = this.initGoogleAuth(); // Call initGoogleAuth when script is loaded
-      document.body.appendChild(script);
-    },
-    methods: {
-      initGoogleAuth() {
-        gapi.load('auth2', function(){
-          gapi.auth2.init();
-        });
-      }
-    
-  }
-  
-}
-function onSignIn(googleUser) {
-  var profile = googleUser.getBasicProfile();
-  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-  console.log('Name: ' + profile.getName());
-  console.log('Image URL: ' + profile.getImageUrl());
-  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-}
-
-function signOut() {
-    var auth2 = gapi.auth2.getAuthInstance();
-    auth2.signOut().then(function () {
-      console.log('User signed out.');
-    });
-  }
-
-
-/* eslint-enable */
-</script>
-
-  
-<style scoped>
-.signin {
-  color: red;
-}
-</style>
-  
-=======
 <template>
   <div>
-    <div v-if="loggedIn">
-      
-      <button @click='logOut'>Logout</button>
-      <h2>Name: {{ user.name }}</h2>
-      <h2>Email: {{ user.email }}</h2>
+    <h1>Enter Your Email to see the alerts associated with it:</h1>
+    <form @submit.prevent="submitForm">
+      <label for="email">Email:</label>
+      <input type="email" v-model="email" id="email" name="email">
+      <button type="submit">Submit</button>
+    </form>
+    <div id="TextArea">
+      <h2>{{ alertMessage }}</h2>
     </div>
-    
-    <GoogleLogin :callback="callback" prompt auto-login/>
-
   </div>
 </template>
 
 <script>
-// I used this tutorial for this implementation: https://youtu.be/hQ5aqvTEqxU?si=PtJwUNVTLvjB-ipB
-import { decodeCredential , googleLogout} from 'vue3-google-login'
-export default{
-  data(){
-    return{
-      loggedIn:false,
-      user:null,
-
-      callback: (response) => {
-        console.log("Logged In");
-        this.loggedIn = true;
-        console.log(response);
-        this.user = decodeCredential(response.credential);
-      }
-    }
+export default {
+  data() {
+    return {
+      email: '',
+      alertMessage: ''
+    };
   },
-  methods:{
-    logOut() {
-      googleLogout(),
-      this.loggedIn = false
+  methods: {
+    async getAlerts(email) {
+      try {
+        const targetUrl = `http://localhost:3000/api/getalerts/${email}`;
+        const response = await fetch(targetUrl);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+
+        let alertArray = await response.text();
+        if (alertArray.length === 0) {
+          this.alertMessage = "No alerts found for this email.";
+        } else {
+          this.alertMessage = ""; // Clear the message if there are alerts
+        }
+        console.log(alertArray);
+      } catch (error) {
+        console.log("Failed to fetch alerts:", error);
+        this.alertMessage = "An error occurred while fetching alerts.";
+      }
+    },
+    submitForm() {
+      if (this.email) {
+        this.getAlerts(this.email);
+      } else {
+        console.log('Email is required');
+      }
     }
   }
 }
-
 </script>
+
 <style scoped>
-a {
-  color: black;
-}
-button {
-  color: black;
-}
 
 </style>
->>>>>>> 5c03f95342935c3b3cf36cef3e924cad90b8afcd

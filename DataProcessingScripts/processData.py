@@ -29,7 +29,7 @@ def processFiles(filenameInput, filenameOutput):
         south = file["StandardMetadata/SouthBoundingCoordinate"][0]
 
     with h5py.File(f"{cloudMaskFileName}", "r") as file:
-        # Load bounding coordinates
+        # Lo    ad bounding coordinates
         cloudMask = file["SDS"]["CloudMask"][:]
         bit0CloudMask = np.bitwise_and(cloudMask, 1)
         # bit1CloudMask = np.bitwise_and(cloudMask, 2)

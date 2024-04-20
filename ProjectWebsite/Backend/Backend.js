@@ -3,8 +3,6 @@
 // TO RUN: node Backend.js
 // ===============================
 
-
-
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -134,13 +132,16 @@ app.post('/add-alert', (req, res) => {
     console.log("Recieved Add Alert Request");
 
     // Check if data is in correct form
-
-
     try 
     {
         if( Object.keys(data).length != 3 || !hasRequiredKeys(data, expectedKeys) 
-            || !isNumber(data["Temperature Threshold"]) || data["Bounding Box"].length != 4)
+            || !isNumber(data["Temperature Threshold"]) || !(isNumber(data["Temperature Threshold"]) > 0)
+            || data["Bounding Box"].length != 4
+            || !isValidEmail(data["Email"]) || !isNumber(data["Bounding Box"][0])
+            || !isNumber(data["Bounding Box"][1]) || !isNumber(data["Bounding Box"][2])
+            || !isNumber(data["Bounding Box"][3]) )
         {
+            console.log("FAILED")
             return res.status(406).send({ message: 'Data failed validation' });
         }
     }
@@ -165,6 +166,7 @@ app.post('/add-alert', (req, res) => {
         alerts.push(data);
         fs.writeFile(filePath, JSON.stringify(alerts), (err) => {
             if (err) return res.status(500).send({ message: 'Error saving data' });
+            console.log("SUCCESS")
             return res.send({ message: 'Alert added successfully' });
         });
         }
@@ -226,6 +228,10 @@ function isNumber(value) {
     return typeof value === 'number';
 }
 
+function isValidEmail(email) {
+    var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
   
 
 // ===================== SET UP FUNCTIONS =====================
