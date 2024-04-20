@@ -1,49 +1,58 @@
 <template>
   <div>
-    <div v-if="loggedIn">
-      
-      <button @click='logOut'>Logout</button>
-      <h2>Name: {{ user.name }}</h2>
-      <h2>Email: {{ user.email }}</h2>
+    <h1>Enter Your Email to see the alerts associated with it:</h1>
+    <form @submit.prevent="submitForm">
+      <label for="email">Email:</label>
+      <input type="email" v-model="email" id="email" name="email">
+      <button type="submit">Submit</button>
+    </form>
+    <div id="TextArea">
+      <h2>{{ alertMessage }}</h2>
     </div>
-    
-    <GoogleLogin :callback="callback" prompt auto-login/>
-
   </div>
 </template>
 
 <script>
-// I used this tutorial for this implementation: https://youtu.be/hQ5aqvTEqxU?si=PtJwUNVTLvjB-ipB
-import { decodeCredential , googleLogout} from 'vue3-google-login'
-export default{
-  data(){
-    return{
-      loggedIn:false,
-      user:null,
-
-      callback: (response) => {
-        console.log("Logged In");
-        this.loggedIn = true;
-        console.log(response);
-        this.user = decodeCredential(response.credential);
-      }
-    }
+export default {
+  data() {
+    return {
+      email: '',
+      alertMessage: ''
+    };
   },
-  methods:{
-    logOut() {
-      googleLogout(),
-      this.loggedIn = false
+  methods: {
+    async getAlerts(email) {
+      try {
+        const targetUrl = `http://localhost:3000/api/getalerts/${email}`;
+        const response = await fetch(targetUrl);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+
+        let alertArray = await response.text();
+        if (alertArray.length === 0) {
+          this.alertMessage = "No alerts found for this email.";
+        } else {
+          this.alertMessage = ""; // Clear the message if there are alerts
+        }
+        console.log(alertArray);
+      } catch (error) {
+        console.log("Failed to fetch alerts:", error);
+        this.alertMessage = "An error occurred while fetching alerts.";
+      }
+    },
+    submitForm() {
+      if (this.email) {
+        this.getAlerts(this.email);
+      } else {
+        console.log('Email is required');
+      }
     }
   }
 }
-
 </script>
+
 <style scoped>
-a {
-  color: black;
-}
-button {
-  color: black;
-}
 
 </style>
