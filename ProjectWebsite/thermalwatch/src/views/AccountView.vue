@@ -6,6 +6,9 @@
       <input type="email" v-model="email" id="email" name="email">
       <button type="submit">Submit</button>
     </form>
+    <div id="TextArea">
+      <h2>{{ alertMessage }}</h2>
+    </div>
   </div>
 </template>
 
@@ -13,7 +16,8 @@
 export default {
   data() {
     return {
-      email: ''
+      email: '',
+      alertMessage: ''
     };
   },
   methods: {
@@ -27,9 +31,15 @@ export default {
         }
 
         let alertArray = await response.text();
+        if (alertArray.length === 0) {
+          this.alertMessage = "No alerts found for this email.";
+        } else {
+          this.alertMessage = ""; // Clear the message if there are alerts
+        }
         console.log(alertArray);
       } catch (error) {
-        console.log("No alerts found")
+        console.log("Failed to fetch alerts:", error);
+        this.alertMessage = "An error occurred while fetching alerts.";
       }
     },
     submitForm() {
@@ -44,4 +54,6 @@ export default {
 </script>
 
 <style scoped>
+
 </style>
+
