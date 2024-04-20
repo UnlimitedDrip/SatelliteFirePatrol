@@ -28,8 +28,8 @@
 
   <div class="map-overlay-inner">
     <h2 id="slider-text">Temperatures over 2019</h2>
-    <label id="month"></label>
-    <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)">
+    <label ref="month"></label>
+    <input id="slider" type="range" min="0" max="11" step="1" value="0" @change="updateDataListSlider($event)" ref="slider">
   </div>
 
   <div class="map-overlay-inner">
@@ -83,6 +83,14 @@ export default {
     Datepicker
   },
   methods: {
+    filterByMonth(month) {
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      // Set the label to the month using Vue's ref
+      this.$refs.month.textContent = months[month];
+    },
     updateDataListSlider(event) {
       var monthVal = Number(event.target.value)+1;
       this.month = monthVal;
@@ -458,7 +466,6 @@ export default {
         // Get averageYears from averages
         const averageYears = averages.map( element => element.split("_")[0] )
         const uniqueAverageYears = Array.from(new Set(averageYears));
-
         const dropdownYear = document.getElementById("dropdownYear");
 
         uniqueAverageYears.forEach(option => {
@@ -563,39 +570,48 @@ export default {
 
       this.reloadMapOverlay(); // Initial load of map overlay
     });
+
+    // Set default to January when the component is mounted
+    this.filterByMonth(0);
+
+    // Set month depending on where the slider is positioned
+    this.$refs.slider.addEventListener('input', (e) => {
+      const month = parseInt(e.target.value, 10);
+      this.filterByMonth(month);
+    });
   }
 }
 
-const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-  ]
 
-function filterByMonth(month) {
-    // Set the label to the month
-    document.getElementById('month').textContent = months[month];
-  }
+// function filterByMonth(month) {
+//   const months = [
+//       "January",
+//       "February",
+//       "March",
+//       "April",
+//       "May",
+//       "June",
+//       "July",
+//       "August",
+//       "September",
+//       "October",
+//       "November",
+//       "December"
+//     ]
+//     // Set the label to the month
+//     document.getElementById('month').textContent = months[month];
+//   }
 
-  document.addEventListener("DOMContentLoaded", function() {
-    // Set default to January
-    filterByMonth(0);
+//   document.addEventListener("DOMContentLoaded", function() {
+//     // Set default to January
+//     filterByMonth(0);
 
-    // Set month depending on where the slider is positioned
-    document.getElementById('slider').addEventListener('input', (e) => {
-      const month = parseInt(e.target.value, 10);
-      filterByMonth(month);
-  });
-});
+//     // Set month depending on where the slider is positioned
+//     document.getElementById('slider').addEventListener('input', (e) => {
+//       const month = parseInt(e.target.value, 10);
+//       filterByMonth(month);
+//   });
+// });
 
 
 
