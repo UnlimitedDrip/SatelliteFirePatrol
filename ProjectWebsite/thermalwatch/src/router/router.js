@@ -6,6 +6,7 @@ import ReferencesView from "../views/ReferencesView.vue"
 
 const router = createRouter({
     history: createWebHistory(),
+    base: 'thermalwatch.org',
     routes: [
         {
             path: "/",

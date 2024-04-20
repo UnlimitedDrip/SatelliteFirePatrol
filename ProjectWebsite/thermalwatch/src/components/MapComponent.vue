@@ -41,7 +41,9 @@
     <button id="create-alert-button" @click="createAlert()">Create an Alert</button>
 
     <div class="number-input-container">
-      <label for="numberInput">Enter a temperature threshold</label>
+      <label for="emailInput">Enter a valid email</label>
+      <input type="email" id="emailInput" name="emailInput">      
+      <label for="numberInput">Enter a temperature threshold in Fahrenheit</label>
       <input type="number" id="numberInput" name="numberInput">
       <button type="submit" @click="submitAlert()">Submit</button>
       <p>Click a drag to draw a rectangle and enter a temperature max. If the temperature threshold is exceeded, you will be emailed</p>
@@ -363,8 +365,6 @@ export default {
     },
     submitAlert() {
 
-      // TODO: Check if user signed in
-
       const map = this.map;
       if (!map) return;
       // remove old layers
@@ -389,8 +389,9 @@ export default {
       // Add Alert to database
       let boundingBox = [this.latStart, this.latEnd, this.lonStart, this.lonEnd];
       let temperatureThreshold =  Number(document.getElementById('numberInput').value);
+      let email =  document.getElementById('emailInput').value;
       
-      let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": ""};
+      let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": email};
 
       fetch('http://localhost:3000/add-alert', {
         method: 'POST',
