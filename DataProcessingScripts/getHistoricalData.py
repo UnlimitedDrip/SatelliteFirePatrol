@@ -7,7 +7,7 @@ import time
 import csv
 import subprocess
 import os
-
+import json
 
 def main(startDate, endDate, dataPath, processedDataPath, csvPath):
     timeStart = time.time()
@@ -27,7 +27,7 @@ def main(startDate, endDate, dataPath, processedDataPath, csvPath):
 
     while currentDate <= endDate:
 
-        print(f"Current: {currentDate}, End {endDate} | {currentDate <= endDate}")
+        print(f"Current: {currentDate}, End {endDate}")
 
         currentDateStr = currentDate.strftime("%Y-%m-%d")
         currentDate += timedelta(days=1)
@@ -81,8 +81,6 @@ def main(startDate, endDate, dataPath, processedDataPath, csvPath):
 
 if __name__ == "__main__":
     currentTime = datetime.now()
-    startDate = "2024-03-03" # ISO format
-    endDate =  "2024-04-06"# ISO format
 
     rawDataPath = ""
     processedDataPath = ""

@@ -40,8 +40,9 @@ export default {
           throw new Error('Failed to fetch');
         }
         this.alertArr = await response.json();
-        if (this.alertArr.length === 0) {
+        if (!this.alertArr.length) {
           this.alertMessage = "No alerts found for this email.";
+          this.alertArr = []
         } else {
           this.alertMessage = ""; // Clear the message if there are alerts
         }

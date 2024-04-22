@@ -11,6 +11,23 @@ def tempConversion(tempValue):
     tempValue *= .02
     return (tempValue - 273.15) * (9/5) + 32
 
+def check_quality(qc_flags):
+    # Check bits 14 and 15 for quality assurance (less than 2k error)
+    lst_accuracy_bits = np.bitwise_and(qc_flags, 0xC000) >> 14
+    if lst_accuracy_bits != 0:
+        return True
+
+    return False
+
+
+def checkUh(bit0P, bit1P, bit14P, bit15P, i, j):
+    bit0 = bit0P[i][j]
+    bit1 = bit1P[i][j]
+    bit14 = bit14P[i][j]
+    bit15 = bit15P[i][j]
+
+    return (((bit0 == 0) and (bit1 == 0) and (bit14 == 1) and (bit15 == 1)) or ((bit0 == 0) and (bit1 == 0) and (bit14 == 0) and (bit15 == 1)))
+
 # Accepts input and output file name
 # Converts file to geojson of temperature
 def processFiles(filenameInput, filenameOutput):
@@ -21,6 +38,11 @@ def processFiles(filenameInput, filenameOutput):
     with h5py.File(f"{filenameInput}", "r") as file:
         # Load bounding coordinates
         lstData = file['SDS']['LST'][:]
+        qcData = file['SDS']['QC'][:]
+        bit0 = np.bitwise_and(qcData, 1)
+        bit1 = np.bitwise_and(qcData, 2)
+        bit14 = np.bitwise_and(qcData, 2**14) >> 14
+        bit15 = np.bitwise_and(qcData, 2**15) >> 15
 
 
         west = file["StandardMetadata/WestBoundingCoordinate"][0]
@@ -32,7 +54,6 @@ def processFiles(filenameInput, filenameOutput):
         # Lo    ad bounding coordinates
         cloudMask = file["SDS"]["CloudMask"][:]
         bit0CloudMask = np.bitwise_and(cloudMask, 1)
-        # bit1CloudMask = np.bitwise_and(cloudMask, 2)
         bit1CloudMask = np.bitwise_and(cloudMask, 2) >> 1
 
     numOfRows, numOfCols = len(lstData), len(lstData[0])  # As mentioned in your data structure
@@ -46,11 +67,6 @@ def processFiles(filenameInput, filenameOutput):
     features = []
 
     timeStart = time.time()
-
-    # shp file
-    # lst - cloudmask_qaqc.py
-        # cloud masks
-        # quality control
 
     count = 0
     divider = lstData.shape[0]
@@ -72,10 +88,11 @@ def processFiles(filenameInput, filenameOutput):
             lat, lon = lats[i], longs[j]
 
             # Converts point to geojson form
-            if globe.is_land(lat, lon) and (bit0CloudMask[i, j] == 1 and bit1CloudMask[i, j] == 1):
+            # if globe.is_land(lat, lon) and (bit0CloudMask[i, j] == 1 and bit1CloudMask[i, j] == 1) and check_quality(qcData[i][j]):
+            if globe.is_land(lat, lon) and checkUh(bit0, bit1, bit14, bit15, i,j):
                 convertedTempF = tempConversion(float(lstData[i, j]))
 
-                if convertedTempF > -10:
+                if convertedTempF > 0:
 
                     feature = geojson.Feature(
                         geometry=geojson.Point((lon, lat)),
