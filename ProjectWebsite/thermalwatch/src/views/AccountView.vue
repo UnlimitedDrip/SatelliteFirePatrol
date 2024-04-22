@@ -1,3 +1,8 @@
+<script setup>
+import AlertTableComp from '../components/AlertTableComponent.vue'
+
+</script>
+
 <template>
   <div>
     <h1>Enter Your Email to see the alerts associated with it:</h1>
@@ -9,15 +14,20 @@
     <div id="TextArea">
       <h2>{{ alertMessage }}</h2>
     </div>
+    <div>
+      <AlertTableComp :alertArr="alertArr" @removeAlert="removeAlert"/>
+    </div>
   </div>
 </template>
 
 <script>
+// AlertTableComp.doSearch(0, 20, "id", "asc");
 export default {
   data() {
     return {
       email: '',
-      alertMessage: ''
+      alertMessage: '',
+      alertArr: []
     };
   },
   methods: {
@@ -29,17 +39,37 @@ export default {
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
-
-        let alertArray = await response.text();
-        if (alertArray.length === 0) {
+        this.alertArr = await response.json();
+        if (this.alertArr.length === 0) {
           this.alertMessage = "No alerts found for this email.";
         } else {
           this.alertMessage = ""; // Clear the message if there are alerts
         }
-        console.log(alertArray);
       } catch (error) {
         console.log("Failed to fetch alerts:", error);
         this.alertMessage = "An error occurred while fetching alerts.";
+      }
+    },
+    async removeAlert(alert) {
+      try{
+        console.log(alert);
+        let response = await fetch('http://localhost:3000/remove-alert', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(alert)
+        })
+        let data = await response.json();
+        console.log(data);
+        this.getAlerts(this.email);
+        // .then(response => response.json())
+        // .then(data => console.log(data))
+        // .then(this.getAlerts())
+        // .catch(error => console.error('Error:', error));
+      }
+      catch (error){
+        console.error("Error:", error);
       }
     },
     submitForm() {
