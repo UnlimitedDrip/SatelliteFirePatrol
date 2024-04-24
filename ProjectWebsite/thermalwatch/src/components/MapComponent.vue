@@ -42,7 +42,7 @@
 
     <div class="number-input-container">
       <label for="emailInput">Enter a valid email</label>
-      <input type="email" id="emailInput" name="emailInput">      
+      <input type="email" id="emailInput" name="emailInput">
       <label for="numberInput">Enter a temperature threshold in Fahrenheit</label>
       <input type="number" id="numberInput" name="numberInput">
       <button type="submit" @click="submitAlert()">Submit</button>
@@ -63,14 +63,14 @@ import { enUS } from 'date-fns/locale';
 export default {
   data() {
     return {
-      locale: enUS, 
-      to: new Date(), //present day 
+      locale: enUS,
+      to: new Date(), //present day
       from: new Date(2019, 0, 1), // January 1st, 2019
       disabledDates: {
         dates: []
       },
       preventDisableDateSelection: true,
-      selected: new Date(2019,0,1),
+      selected: new Date(),
       dataList: [],
       map: null,
       year: 2023,
@@ -115,9 +115,9 @@ export default {
         // get date in form -> yyyymmdd
         const date = this.formatDate(newDate);
         // Get date data
-        let files = this.getFilesFromDate(date) 
-  
-        this.dataList = [] 
+        let files = this.getFilesFromDate(date)
+
+        this.dataList = []
         for(let index = 0; index < files.length; index++)
         {
           this.fetchFileMutliple(files[index], index)
@@ -131,7 +131,7 @@ export default {
       let end = new Date();
 
       var date = new Date(start);
-      while(date <= end){  
+      while(date <= end){
         // Convert date to string and get file data for that date
         let dateStr = this.formatDate(date);
         let files = this.getFilesFromDate(dateStr);
@@ -140,7 +140,7 @@ export default {
         if(files.length == 0){
           this.disabledDates.dates.push(new Date(date));
         }
-        
+
         // Index to next date
         var newDate = date.setDate(date.getDate() + 1);
         date = new Date(newDate);
@@ -159,7 +159,7 @@ export default {
 
       const matchingFiles = options.filter(option => {
         const parts = option.split('_');
-        if (parts.length < 6) return false; 
+        if (parts.length < 6) return false;
         const fileDate = parts[5].split('T')[0];
         return fileDate === date;
       });
@@ -284,18 +284,18 @@ export default {
         document.querySelector('.number-input-container').style.display = 'none';
         this.drawingRectangle = false;
       }
-      else 
+      else
       {
         document.getElementById('create-alert-button').innerText = 'Cancel Alert';
         document.querySelector('.number-input-container').style.display = 'block';
-  
+
         this.drawingRectangle = true;
         this.map.on('mousedown', this.onMouseDown);
         this.map.once('mouseup', this.onMouseUp);
       }
     },
     onMouseDown(e) {
-      
+
       if(!this.drawingRectangle) return;
 
       // Prevent the default map drag behavior
@@ -304,7 +304,7 @@ export default {
       // Record the start position
       this.start = e.lngLat;
 
-      // Add a temporary rectangle to the map 
+      // Add a temporary rectangle to the map
       this.map.addSource('rectangle', {
           type: 'geojson',
           data: {
@@ -316,7 +316,7 @@ export default {
                       [this.start.lng, this.start.lat],
                       [this.start.lng, this.start.lat],
                       [this.start.lng, this.start.lat],
-                      [this.start.lng, this.start.lat] 
+                      [this.start.lng, this.start.lat]
                   ]]
               }
           }
@@ -336,7 +336,7 @@ export default {
 
       // Listen for mouse movement to update the rectangle
       this.map.on('mousemove', this.onMouseMove);
-    },  
+    },
     onMouseMove(e) {
       // Update the rectangle's coordinates based on the current pointer location
       const current = e.lngLat;
@@ -344,13 +344,13 @@ export default {
       coordinates[1] = [current.lng, this.start.lat];
       coordinates[2] = [current.lng, current.lat];
       coordinates[3] = [this.start.lng, current.lat];
-      coordinates[4] = [this.start.lng, this.start.lat]; 
+      coordinates[4] = [this.start.lng, this.start.lat];
 
       this.latStart = Math.min(this.start.lat, current.lat);
       this.latEnd = Math.max(this.start.lat, current.lat);
       this.lonStart = Math.min(this.start.lng, current.lng);
       this.lonEnd = Math.max(this.start.lng, current.lng);
-      
+
       this.map.getSource('rectangle').setData({
           type: 'Feature',
           geometry: {
@@ -391,17 +391,17 @@ export default {
           }
         });
       }
-      
+
       document.querySelector('.number-input-container').style.display = 'none';
 
       // Add Alert to database
       let boundingBox = [this.latStart, this.latEnd, this.lonStart, this.lonEnd];
       let temperatureThreshold =  Number(document.getElementById('numberInput').value);
       let email =  document.getElementById('emailInput').value;
-      
+
       let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": email};
 
-      fetch('http://localhost:3000/add-alert', {
+      fetch('http://localhost:3002/add-alert', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -421,13 +421,13 @@ export default {
     },
     async getAlerts(id) {
       try {
-        const targetUrl = `http://localhost:3000/api/getalerts/${id}`;
+        const targetUrl = `http://146.190.37.0:3002/api/getalerts/${id}`;
         const response = await fetch(targetUrl);
-  
+
         if (!response.ok) {
           throw new Error('Failed to fetch');
         }
-  
+
         let alertArray = await response.text();
         console.log(alertArray)
       }
@@ -435,9 +435,9 @@ export default {
       {
         console.log("No alerts found")
       }
-    },    
+    },
     async removeAlert(alert) {
-      fetch('http://localhost:3000/remove-alert', {
+      fetch('http://146.190.37.0:3002/remove-alert', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -449,12 +449,9 @@ export default {
       .catch(error => console.error('Error:', error));
     },
     async fetchDataCsv() {
-      // await this.getAlerts("zhallemeyer@gmail.com");
-      // await this.removeAlert({"Bounding Box":[16.9,22.6,-160.8,-154.61],"Temperature Threshold":80,"Email":"zhallemeyer@gmail.com"});
-      // await this.getAlerts("zhallemeyer@gmail.com");
       try {
         // Update the target URL to the endpoint of your Node.js backend server
-        const targetUrl = 'http://localhost:3000/api/data';
+        const targetUrl = 'http://146.190.37.0:3002/api/data';
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         this.fileContent = await response.text();
@@ -486,14 +483,14 @@ export default {
 
     },
     async fetchFile(filename) {
-      
+
       try {
-        const targetUrl = `http://localhost:3000/api/geojson/${filename}`;
+        const targetUrl = `http://146.190.37.0:3002/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
 
-        this.reloadMapOverlayHelper(geojsonData, 0); 
+        this.reloadMapOverlayHelper(geojsonData, 0);
         this.dataList = [filename];
       } catch (error) {
         console.error('There was a problem fetching the GeoJSON file:', error);
@@ -504,12 +501,12 @@ export default {
       this.removeOldLayers();
 
       try {
-        const targetUrl = `http://localhost:3000/api/geojson/${filename}`;
+        const targetUrl = `http://146.190.37.0:3002/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
 
-        this.reloadMapOverlayHelper(geojsonData, index, false); 
+        this.reloadMapOverlayHelper(geojsonData, index, false);
       } catch (error) {
         console.error('There was a problem fetching the GeoJSON file:', error);
       }
@@ -521,7 +518,7 @@ export default {
         let filename = this.dataList[index];
         console.log(`Attempting to download ${filename}`)
         try {
-          const url = `http://localhost:3000/api/geojson/${filename}`;  
+          const url = `http://146.190.37.0:3002/api/geojson/${filename}`;
           const response = await fetch(url);
           const data = await response.json();
           const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
@@ -540,7 +537,7 @@ export default {
       }
 
     }
-    
+
   },
   mounted() {
     mapboxgl.accessToken = 'pk.eyJ1IjoidW5saW1pdGVkZHJpcCIsImEiOiJjbHNqbDNyZHExbnhnMmttbmJzMGxnMHUyIn0._TP9MLLTlUfbizgm0jvYDw';
@@ -565,7 +562,7 @@ export default {
       minZoom: 5,
     });
 
-    // Load data 
+    // Load data
     map.on('load', () => {
       this.map = map; // Assigning map to a component property for future reference
 

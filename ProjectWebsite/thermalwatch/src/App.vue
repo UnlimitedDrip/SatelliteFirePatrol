@@ -7,9 +7,9 @@ import {RouterView} from "vue-router"
     <div class="nav-container">
       <h1><a href="/">ThermalWatch</a></h1>
       <ul class="nav">
-        <li class="item"><a href="/">Home</a></li>
-        <li class="item"><a href="/about">About</a></li>
-        <li class="item"><a href="/account">Account</a></li>
+        <li class="item"><router-link to="/">Home</router-link></li>
+        <li class="item"><router-link to="/about">About</router-link></li>
+        <li class="item"><router-link to="/account">Account</router-link></li>
       </ul>
     </div>
     <RouterView/>
