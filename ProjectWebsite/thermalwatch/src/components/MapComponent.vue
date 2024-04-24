@@ -54,6 +54,7 @@
 </template>
 
 <script>
+// Lines needed to be changed for url are 405, 425, 441, 455, 489, 505, 522
 import mapboxgl from 'mapbox-gl';
 import Datepicker from 'vue3-datepicker';
 import { enUS } from 'date-fns/locale';
@@ -401,7 +402,7 @@ export default {
 
       let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": email};
 
-      fetch('http://localhost:3002/add-alert', {
+      fetch('http://35.82.41.91:3000/add-alert', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -421,7 +422,7 @@ export default {
     },
     async getAlerts(id) {
       try {
-        const targetUrl = `http://146.190.37.0:3002/api/getalerts/${id}`;
+        const targetUrl = `35.82.41.91:3000/api/getalerts/${id}`;
         const response = await fetch(targetUrl);
 
         if (!response.ok) {
@@ -437,7 +438,7 @@ export default {
       }
     },
     async removeAlert(alert) {
-      fetch('http://146.190.37.0:3002/remove-alert', {
+      fetch('35.82.41.91:3000/remove-alert', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -451,7 +452,7 @@ export default {
     async fetchDataCsv() {
       try {
         // Update the target URL to the endpoint of your Node.js backend server
-        const targetUrl = 'http://146.190.37.0:3002/api/data';
+        const targetUrl = 'http://35.82.41.91/:3000/api/data';
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         this.fileContent = await response.text();
@@ -485,7 +486,7 @@ export default {
     async fetchFile(filename) {
 
       try {
-        const targetUrl = `http://146.190.37.0:3002/api/geojson/${filename}`;
+        const targetUrl = `http://35.82.41.91:3000/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
@@ -501,7 +502,7 @@ export default {
       this.removeOldLayers();
 
       try {
-        const targetUrl = `http://146.190.37.0:3002/api/geojson/${filename}`;
+        const targetUrl = `http://35.82.41.91:3000/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
@@ -518,7 +519,7 @@ export default {
         let filename = this.dataList[index];
         console.log(`Attempting to download ${filename}`)
         try {
-          const url = `http://146.190.37.0:3002/api/geojson/${filename}`;
+          const url = `http://35.82.41.91:3000/api/geojson/${filename}`;
           const response = await fetch(url);
           const data = await response.json();
           const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
