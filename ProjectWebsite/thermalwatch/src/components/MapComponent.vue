@@ -452,7 +452,7 @@ export default {
     async fetchDataCsv() {
       try {
         // Update the target URL to the endpoint of your Node.js backend server
-        const targetUrl = 'http://35.82.41.91/:3000/api/data';
+        const targetUrl = 'http://35.82.41.91:3000/api/data';
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         this.fileContent = await response.text();
