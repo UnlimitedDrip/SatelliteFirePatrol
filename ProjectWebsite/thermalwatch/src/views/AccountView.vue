@@ -33,7 +33,7 @@ export default {
   methods: {
     async getAlerts(email) {
       try {
-        const targetUrl = `http:www.thermalwatch.org/api/getalerts/${email}`;
+        const targetUrl = `http://thermalwatch.org:3002/api/getalerts/${email}`;
         const response = await fetch(targetUrl);
 
         if (!response.ok) {
@@ -54,7 +54,7 @@ export default {
     async removeAlert(alert) {
       try{
         console.log(alert);
-        let response = await fetch('http:www.thermalwatch.org/remove-alert', {
+        let response = await fetch('http://thermalwatch.org:3002/remove-alert', {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json'

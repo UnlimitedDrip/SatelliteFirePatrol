@@ -421,7 +421,7 @@ export default {
     },
     async getAlerts(id) {
       try {
-        const targetUrl = `http://146.190.37.0:3002/api/getalerts/${id}`;
+        const targetUrl = `http://thermalwatch.org:3002/api/getalerts/${id}`;
         const response = await fetch(targetUrl);
 
         if (!response.ok) {
@@ -437,7 +437,7 @@ export default {
       }
     },
     async removeAlert(alert) {
-      fetch('http://146.190.37.0:3002/remove-alert', {
+      fetch('http://thermalwatch.org:3002/remove-alert', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -451,7 +451,7 @@ export default {
     async fetchDataCsv() {
       try {
         // Update the target URL to the endpoint of your Node.js backend server
-        const targetUrl = 'http://146.190.37.0:3002/api/data';
+        const targetUrl = 'http://thermalwatch.org:3002/api/data';
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         this.fileContent = await response.text();
@@ -485,7 +485,7 @@ export default {
     async fetchFile(filename) {
 
       try {
-        const targetUrl = `http://146.190.37.0:3002/api/geojson/${filename}`;
+        const targetUrl = `http://thermalwatch.org:3002/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
@@ -501,7 +501,7 @@ export default {
       this.removeOldLayers();
 
       try {
-        const targetUrl = `http://146.190.37.0:3002/api/geojson/${filename}`;
+        const targetUrl = `http://thermalwatch.org:3002/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
@@ -518,7 +518,7 @@ export default {
         let filename = this.dataList[index];
         console.log(`Attempting to download ${filename}`)
         try {
-          const url = `http://146.190.37.0:3002/api/geojson/${filename}`;
+          const url = `http://thermalwatch.org:3002/api/geojson/${filename}`;
           const response = await fetch(url);
           const data = await response.json();
           const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});

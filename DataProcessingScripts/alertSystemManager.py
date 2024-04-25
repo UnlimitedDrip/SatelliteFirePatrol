@@ -1,7 +1,7 @@
 import requests
-import json 
+import json
 
-url = 'http://localhost:3000/alertsystem'
+url = 'http://thermalwatch.org:3002/alertsystem'
 
 with open("dataConfig.json", "r") as dataConfigFile:
     apiKey = json.load(dataConfigFile)["AWSApiKey"]
