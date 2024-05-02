@@ -27,13 +27,14 @@ export default {
     return {
       email: '',
       alertMessage: '',
-      alertArr: []
+      alertArr: [],
+      apiUrl: "http://thermalwatch.org:3002"
     };
   },
   methods: {
     async getAlerts(email) {
       try {
-        const targetUrl = `http://thermalwatch.org:3002/api/getalerts/${email}`;
+        const targetUrl = `${this.apiUrl}/api/getalerts/${email}`;
         const response = await fetch(targetUrl);
 
         if (!response.ok) {
@@ -54,20 +55,18 @@ export default {
     async removeAlert(alert) {
       try{
         console.log(alert);
-        let response = await fetch('http://thermalwatch.org:3002/remove-alert', {
+        let response = await fetch(`${this.apiUrl}/remove-alert`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json'
             },
             body: JSON.stringify(alert)
         })
-        let data = await response.json();
-        console.log(data);
+
+        await response.json();
+        //let data = await response.json();
+        //console.log(data)
         this.getAlerts(this.email);
-        // .then(response => response.json())
-        // .then(data => console.log(data))
-        // .then(this.getAlerts())
-        // .catch(error => console.error('Error:', error));
       }
       catch (error){
         console.error("Error:", error);

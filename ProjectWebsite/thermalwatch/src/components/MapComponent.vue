@@ -54,10 +54,10 @@
 </template>
 
 <script>
+// Lines needed to be changed for url are 405, 425, 441, 455, 489, 505, 522
 import mapboxgl from 'mapbox-gl';
 import Datepicker from 'vue3-datepicker';
 import { enUS } from 'date-fns/locale';
-// import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 
 
 export default {
@@ -79,6 +79,7 @@ export default {
       latEnd: null,
       lonStart: null,
       lonEnd: null,
+      apiUrl: "http://thermalwatch.org:3002"
     };
   },
   components: {
@@ -263,7 +264,6 @@ export default {
       // remove old layers
       map.getStyle().layers.forEach((layer) => {
         if (layer.id.startsWith('rectangle')) {
-          console.log("rah")
           map.removeLayer(layer.id);
         }
       });
@@ -378,7 +378,6 @@ export default {
       // remove old layers
       map.getStyle().layers.forEach((layer) => {
         if (layer.id.startsWith('rectangle')) {
-          console.log("rah")
           map.removeLayer(layer.id);
         }
       });
@@ -401,7 +400,7 @@ export default {
 
       let jsonObject = {"Bounding Box": boundingBox, "Temperature Threshold": temperatureThreshold, "Email": email};
 
-      fetch('http://localhost:3002/add-alert', {
+      fetch(`${this.apiUrl}/add-alert`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -419,39 +418,10 @@ export default {
 
       document.getElementById('create-alert-button').innerText = 'Create an Alert';
     },
-    async getAlerts(id) {
-      try {
-        const targetUrl = `http://thermalwatch.org:3002/api/getalerts/${id}`;
-        const response = await fetch(targetUrl);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
-        }
-
-        let alertArray = await response.text();
-        console.log(alertArray)
-      }
-      catch(error)
-      {
-        console.log("No alerts found")
-      }
-    },
-    async removeAlert(alert) {
-      fetch('http://thermalwatch.org:3002/remove-alert', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(alert)
-      })
-      .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.error('Error:', error));
-    },
     async fetchDataCsv() {
       try {
         // Update the target URL to the endpoint of your Node.js backend server
-        const targetUrl = 'http://thermalwatch.org:3002/api/data';
+        const targetUrl = `${this.apiUrl}/api/data`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         this.fileContent = await response.text();
@@ -485,7 +455,7 @@ export default {
     async fetchFile(filename) {
 
       try {
-        const targetUrl = `http://thermalwatch.org:3002/api/geojson/${filename}`;
+        const targetUrl = `${this.apiUrl}/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
@@ -501,7 +471,7 @@ export default {
       this.removeOldLayers();
 
       try {
-        const targetUrl = `http://thermalwatch.org:3002/api/geojson/${filename}`;
+        const targetUrl = `${this.apiUrl}/api/geojson/${filename}`;
         const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Network response was not ok');
         const geojsonData = await response.json(); // Parse the GeoJSON data
@@ -518,7 +488,7 @@ export default {
         let filename = this.dataList[index];
         console.log(`Attempting to download ${filename}`)
         try {
-          const url = `http://thermalwatch.org:3002/api/geojson/${filename}`;
+          const url = `{this.apiUrl}/api/geojson/${filename}`;
           const response = await fetch(url);
           const data = await response.json();
           const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
@@ -581,35 +551,6 @@ export default {
 }
 
 
-// function filterByMonth(month) {
-//   const months = [
-//       "January",
-//       "February",
-//       "March",
-//       "April",
-//       "May",
-//       "June",
-//       "July",
-//       "August",
-//       "September",
-//       "October",
-//       "November",
-//       "December"
-//     ]
-//     // Set the label to the month
-//     document.getElementById('month').textContent = months[month];
-//   }
-
-//   document.addEventListener("DOMContentLoaded", function() {
-//     // Set default to January
-//     filterByMonth(0);
-
-//     // Set month depending on where the slider is positioned
-//     document.getElementById('slider').addEventListener('input', (e) => {
-//       const month = parseInt(e.target.value, 10);
-//       filterByMonth(month);
-//   });
-// });
 
 
 

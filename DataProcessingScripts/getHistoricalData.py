@@ -58,14 +58,15 @@ def main(startDate, endDate, dataPath, processedDataPath, csvPath):
                     print("File already used")
 
 
-            # process new data
         # process new data
         for file in filesToProcess:
             processFiles( os.path.join(dataPath, file), os.path.join( processedDataPath, file.replace(".h5", ".geojson") ) )
-            AverageTempManager(processedDataPath, os.path.join( processedDataPath, file.replace(".h5", ".geojson") ), file.replace(".h5", ".geojson") )
+            averageTempFileCreated, averageFileName = AverageTempManager(processedDataPath, os.path.join( processedDataPath, file.replace(".h5", ".geojson") ), file.replace(".h5", ".geojson") )
 
+            if averageTempFileCreated:
+                csvData.append(averageFileName)
 
-                #  Write to csv
+            #  Write to csv
             with open(csvPath, mode='w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(csvData)
@@ -94,12 +95,5 @@ if __name__ == "__main__":
         dataCsvPath = dataConfigData["DataCsvPath"]
         startDate = dataConfigData["HistoricalStartDate"]
         endDate = dataConfigData["HistoricalEndDate"]
-
-    # dataPath = "/scratch/zmh47/Data"
-    # processedDataPath = "/projects/climate_data/ben/capstone_project"
-    # csvPath = "/projects/climate_data/ben/capstone_project/data.csv"
-    # dataPath = "Data"
-    # processedDataPath = "ProcessedData"
-    # csvPath = "ProcessedData/data.csv"
 
     main(startDate, endDate, rawDataPath, processedDataPath, dataCsvPath)

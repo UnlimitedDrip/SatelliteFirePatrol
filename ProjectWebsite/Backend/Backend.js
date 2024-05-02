@@ -51,12 +51,12 @@ app.get('/api/getalerts/:id', async (req, res) => {
     const filePath = 'alertSystemStorage.json';
     let foundAlerts = [];
     console.log(`Request for alert system info - ${id} recieved`);
-    
+
     // Read the existing JSON file
     fs.readFile(filePath, (err, fileData) => {
         if (err && err.code === 'ENOENT') {
             return res.status(500).send({ message: 'No alerts found' });
-        } 
+        }
         else {
             // File exists, parse it and add the new alert
             const alerts = JSON.parse(fileData);
@@ -73,7 +73,7 @@ app.get('/api/getalerts/:id', async (req, res) => {
             {
                 return res.status(200).send(foundAlerts);
             }
-            else 
+            else
             {
                 return res.status(200).send({ message: 'No alerts found' });
             }
@@ -132,9 +132,9 @@ app.post('/add-alert', (req, res) => {
     console.log("Recieved Add Alert Request");
 
     // Check if data is in correct form
-    try 
+    try
     {
-        if( Object.keys(data).length != 3 || !hasRequiredKeys(data, expectedKeys) 
+        if( Object.keys(data).length != 3 || !hasRequiredKeys(data, expectedKeys)
             || !isNumber(data["Temperature Threshold"]) || !(isNumber(data["Temperature Threshold"]) > 0)
             || data["Bounding Box"].length != 4
             || !isValidEmail(data["Email"]) || !isNumber(data["Bounding Box"][0])
@@ -150,7 +150,7 @@ app.post('/add-alert', (req, res) => {
         if (error) return res.status(406).send({ message: 'Data failed validation' });
     }
 
-    
+
 
     // Read the existing JSON file
     fs.readFile(filePath, (err, fileData) => {
@@ -184,7 +184,7 @@ app.post('/remove-alert', (req, res) => {
     fs.readFile(filePath, (err, fileData) => {
         if (err && err.code === 'ENOENT') {
             return res.status(500).send({ message: 'No alerts found' });
-        } 
+        }
         else {
             // File exists, parse it and add the new alert
             let alerts = JSON.parse(fileData);
@@ -193,7 +193,7 @@ app.post('/remove-alert', (req, res) => {
 
             for(let alert of alerts)
             {
-                if( alert["Email"] == id && 
+                if( alert["Email"] == id &&
                     boundingBoxToRemove[0] == alert["Bounding Box"][0] &&
                     boundingBoxToRemove[1] == alert["Bounding Box"][1] &&
                     boundingBoxToRemove[2] == alert["Bounding Box"][2] &&
@@ -205,7 +205,7 @@ app.post('/remove-alert', (req, res) => {
             }
 
             if (index > -1) {
-                alerts.splice(removeIndex, 1); 
+                alerts.splice(removeIndex, 1);
                 fs.writeFile(filePath, JSON.stringify(alerts), (err) => {
                     if (err) return res.status(500).send({ message: 'Error saving data' });
                     return res.send({ message: 'Alert removed successfully' });
@@ -214,7 +214,7 @@ app.post('/remove-alert', (req, res) => {
             else {
                 return res.send({ message: 'No Alert found to be deleted' });
             }
-        
+
 
         }
     });
@@ -232,8 +232,8 @@ function isValidEmail(email) {
     var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   }
-  
+
 
 // ===================== SET UP FUNCTIONS =====================
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
